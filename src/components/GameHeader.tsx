@@ -11,8 +11,8 @@ interface GameHeaderProps {
 
 export const GameHeader: React.FC<GameHeaderProps> = ({ onShowHelp, onRestart, onDueto, onQuarteto, onHome }) => {
   return (
-    <header className="w-full border-b border-[#3d3d3d] bg-[#1a1a1a]">
-      <div className="max-w-2xl mx-auto px-4 py-4 flex items-center justify-between">
+    <header className="w-full bg-[#1a1a1a] p-0 m-0 rounded-b-2xl">
+      <div className="w-full max-w-7xl mx-auto px-8 py-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="">
             <img src="/assets/images/Palavrim.png" alt="Palavrim" className="w-10 h-10" />

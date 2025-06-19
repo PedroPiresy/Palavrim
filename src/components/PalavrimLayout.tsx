@@ -7,21 +7,7 @@ interface PalavrimLayoutProps {
 
 export default function PalavrimLayout({ children }: PalavrimLayoutProps) {
   return (
-    <div className="min-h-screen bg-gray-900 text-green-400 font-mono overflow-hidden relative">
-      {/* Palavrim-style background pattern */}
-      <div className="absolute inset-0 opacity-5">
-        <div className="grid grid-cols-12 gap-1 h-full">
-          {[...Array(144)].map((_, i) => (
-            <div key={i} className="bg-purple-500 h-full opacity-20"></div>
-          ))}
-        </div>
-      </div>
-
-      {/* Terminal scanlines effect */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="h-full w-full bg-gradient-to-b from-transparent via-purple-900/5 to-transparent animate-pulse"></div>
-      </div>
-
+    <div style={{ backgroundColor: '#1a1a1a' }} className="min-h-screen text-green-400 font-mono overflow-hidden relative">
       <div className="relative z-10 min-h-screen flex flex-col">
         {/* Palavrim status bar */}
         <div className="bg-purple-800 text-white px-4 py-1 text-sm border-b border-purple-600">
@@ -37,10 +23,6 @@ export default function PalavrimLayout({ children }: PalavrimLayoutProps) {
         {/* Main content area (sem sidebar de linha) */}
         <div className="flex flex-1">
           <div className="flex-1 p-8 relative">
-            {/* Palavrim command area */}
-            <div className="absolute top-4 left-12 text-purple-300 text-sm">
-              <span className="opacity-60">~</span>
-            </div>
             <div className="flex flex-col items-center justify-center min-h-full space-y-8">
               {children}
             </div>

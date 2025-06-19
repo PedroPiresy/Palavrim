@@ -8,6 +8,8 @@ import { useGame } from './hooks/useGame';
 import { Loader2 } from 'lucide-react';
 import { api } from './utils/api';
 import PalavrimLayout from './components/PalavrimLayout';
+import { Routes, Route, useNavigate } from 'react-router-dom';
+import NotFound from './NotFound';
 
 function App() {
   const [notification, setNotification] = useState<string>('');
@@ -66,14 +68,16 @@ function App() {
   // Adicionar estado para grid ativo no modo dueto
   const [duetoAtivo, setDuetoAtivo] = useState<1 | 2>(1);
 
+  const navigate = useNavigate();
+
   // Iniciar modo Dueto
   const iniciarDueto = async () => {
-    window.location.href = '/notfound';
+    navigate('/notfound');
   };
 
   // Iniciar modo Abracatetra
   const iniciarTetra = async () => {
-    window.location.href = '/notfound';
+    navigate('/notfound');
   };
 
   // Modificar funções de digitação do dueto para só permitir digitação no grid ativo
@@ -359,252 +363,252 @@ function App() {
   }
 
   return (
-    <PalavrimLayout>
-      <GameHeader
-        onShowHelp={() => setShowHelp(true)}
-        onRestart={ativarModoComando}
-        onDueto={iniciarDueto}
-        onQuarteto={iniciarTetra}
-        onHome={voltarParaNormal}
-      />
-      <main className="flex-1 flex flex-col items-center justify-center max-w-6xl mx-auto w-full py-4">
-        {notification && (
-          <div className="w-full flex justify-center mb-4">
-            <Notification
-              key={notificationKey}
-              message={notification}
-              type={
-                notification.includes('Erro') || notification.includes('pena') || notification.includes('😔') ? 'error' :
-                (notification.includes('Parabéns') || notification.includes('🎉') ? 'success' : 'info')
-              }
+    <Routes>
+      <Route path="/notfound" element={<NotFound />} />
+      <Route path="/*" element={
+        <PalavrimLayout>
+          <div className="w-full max-w-full m-0 p-0">
+            <GameHeader
+              onShowHelp={() => setShowHelp(true)}
+              onRestart={ativarModoComando}
+              onDueto={iniciarDueto}
+              onQuarteto={iniciarTetra}
+              onHome={voltarParaNormal}
             />
           </div>
-        )}
-        <div className="w-full flex flex-col md:flex-row md:gap-8 items-center justify-center space-y-6 md:space-y-0">
-          {modo === 'dueto' ? (
-            <>
-              <GameGrid
-                guesses={dueto.guesses}
-                currentGuess={dueto.currentGuess.split('')}
-                wordLength={5}
-                maxAttempts={7}
-                getLetterStates={g => getLetterStatesDueto(g, dueto.word1)}
-                isCompleted={dueto.status1 !== 'playing'}
-                selectedIndex={0}
-                selectIndex={() => {}}
-              />
-              <GameGrid
-                guesses={dueto.guesses}
-                currentGuess={dueto.currentGuess.split('')}
-                wordLength={5}
-                maxAttempts={7}
-                getLetterStates={g => getLetterStatesDueto(g, dueto.word2)}
-                isCompleted={dueto.status2 !== 'playing'}
-                selectedIndex={0}
-                selectIndex={() => {}}
-              />
-            </>
-          ) : modo === 'abracatetra' ? (
-            <>
-              {tetra.words.map((word, idx) => (
-                <GameGrid
-                  key={idx}
-                  guesses={tetra.guesses}
-                  currentGuess={tetra.currentGuess.split('')}
-                  wordLength={5}
-                  maxAttempts={9}
-                  getLetterStates={g => getLetterStatesTetra(g, word)}
-                  isCompleted={false}
-                  selectedIndex={0}
-                  selectIndex={() => {}}
+          <main className="flex-1 flex flex-col items-center justify-center max-w-7xl mx-auto w-full py-4">
+            {notification && (
+              <div className="w-full flex justify-center mb-4">
+                <Notification
+                  key={notificationKey}
+                  message={notification}
+                  type={
+                    notification.includes('Erro') || notification.includes('pena') || notification.includes('😔') ? 'error' :
+                    (notification.includes('Parabéns') || notification.includes('🎉') ? 'success' : 'info')
+                  }
                 />
-              ))}
-            </>
-          ) : (
-          <GameGrid
-            guesses={gameState.guesses}
-            currentGuess={gameState.currentGuess}
-            wordLength={wordLength}
-            maxAttempts={gameState.maxAttempts}
-            getLetterStates={getLetterStates}
-            isCompleted={false}
-            selectedIndex={selectedIndex}
-            selectIndex={selectIndex}
-          />
-          )}
-        </div>
-        <Keyboard
-          keyboardStates={modo === 'dueto' ? getKeyboardStatesDueto() : modo === 'abracatetra' ? getKeyboardStatesTetra() : getKeyboardStates()}
-          onKeyPress={modo === 'dueto' ? addLetterDueto : modo === 'abracatetra' ? addLetterTetra : addLetterNormal}
-          onDelete={modo === 'dueto' ? removeLetterDueto : modo === 'abracatetra' ? removeLetterTetra : removeLetterNormal}
-          onEnter={modo === 'dueto' ? submitGuessDueto : modo === 'abracatetra' ? submitGuessTetra : submitGuess}
-          disabled={modo === 'dueto'
-            ? dueto.status1 !== 'playing' && dueto.status2 !== 'playing'
-            : modo === 'abracatetra'
-              ? tetra.status.every(s => s !== 'playing')
-              : gameState.gameStatus !== 'playing'}
-        />
-        {modo === 'dueto' && (dueto.status1 !== 'playing' && dueto.status2 !== 'playing') && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-            <div className="p-6 bg-[#2d2d2d] rounded-lg border border-[#3d3d3d] shadow-xl min-w-[320px] max-w-full flex flex-col items-center">
-              <div className="space-y-2 text-center">
-                <h3 className="text-2xl font-bold text-[#8b5cf6] font-mono flex items-center justify-center gap-2">
-                  {dueto.guesses.length === dueto.maxAttempts ? (
-                    <span className="text-3xl">Ufa!</span>
-                  ) : (
-                    <>Abracadupla finalizado!</>
-                  )}
-                </h3>
-                <p className="text-[#d0d0d0] font-mono">
-                  Palavra 1: <span className="font-bold text-[#4ade80]">{dueto.word1}</span> - {dueto.status1 === 'won' ? 'Acertou!' : 'Errou!'}<br />
-                  Palavra 2: <span className="font-bold text-[#4ade80]">{dueto.word2}</span> - {dueto.status2 === 'won' ? 'Acertou!' : 'Errou!'}
-                  </p>
-                </div>
-              <div className="flex flex-col gap-2 w-full mt-2">
-                <button
-                  onClick={restartDueto}
-                  className="px-6 py-3 bg-[#8b5cf6] text-white font-mono rounded-lg hover:bg-[#6d28d9] transition-all duration-200"
-                >
-                  Jogar Novamente
-                </button>
               </div>
-            </div>
-          </div>
-        )}
-        {modo === 'abracatetra' && tetra.status.every(s => s !== 'playing') && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-            <div className="p-6 bg-[#2d2d2d] rounded-lg border border-[#3d3d3d] shadow-xl min-w-[320px] max-w-full flex flex-col items-center">
-              <div className="space-y-2 text-center">
-                <h3 className="text-2xl font-bold text-[#8b5cf6] font-mono flex items-center justify-center gap-2">
-                  {tetra.guesses.length === tetra.maxAttempts ? (
-                    <span className="text-3xl">Ufa!</span>
-                  ) : (
-                    <>Abracatetra finalizado!</>
-                  )}
-                </h3>
-                {tetra.words.map((word, idx) => (
-                  <p key={idx} className="text-[#d0d0d0] font-mono">
-                    Palavra {idx + 1}: <span className="font-bold text-[#4ade80]">{word}</span> - {tetra.status[idx] === 'won' ? 'Acertou!' : 'Errou!'}
-                  </p>
-                ))}
-              </div>
-              <button
-                onClick={restartTetra}
-                className="mt-4 px-6 py-3 bg-[#8b5cf6] text-white font-mono rounded-lg hover:bg-[#6d28d9] transition-all duration-200"
-              >
-                Jogar Novamente
-              </button>
-            </div>
-                </div>
+            )}
+            <div className="w-full flex flex-col md:flex-row md:gap-8 items-center justify-center space-y-6 md:space-y-0">
+              {modo === 'dueto' ? (
+                <>
+                  <GameGrid
+                    guesses={dueto.guesses}
+                    currentGuess={dueto.currentGuess.split('')}
+                    wordLength={5}
+                    maxAttempts={7}
+                    getLetterStates={g => getLetterStatesDueto(g, dueto.word1)}
+                    isCompleted={dueto.status1 !== 'playing'}
+                    selectedIndex={0}
+                    selectIndex={() => {}}
+                  />
+                  <GameGrid
+                    guesses={dueto.guesses}
+                    currentGuess={dueto.currentGuess.split('')}
+                    wordLength={5}
+                    maxAttempts={7}
+                    getLetterStates={g => getLetterStatesDueto(g, dueto.word2)}
+                    isCompleted={dueto.status2 !== 'playing'}
+                    selectedIndex={0}
+                    selectIndex={() => {}}
+                  />
+                </>
+              ) : modo === 'abracatetra' ? (
+                <>
+                  {tetra.words.map((word, idx) => (
+                    <GameGrid
+                      key={idx}
+                      guesses={tetra.guesses}
+                      currentGuess={tetra.currentGuess.split('')}
+                      wordLength={5}
+                      maxAttempts={9}
+                      getLetterStates={g => getLetterStatesTetra(g, word)}
+                      isCompleted={false}
+                      selectedIndex={0}
+                      selectIndex={() => {}}
+                    />
+                  ))}
+                </>
+              ) : (
+              <GameGrid
+                guesses={gameState.guesses}
+                currentGuess={gameState.currentGuess}
+                wordLength={wordLength}
+                maxAttempts={gameState.maxAttempts}
+                getLetterStates={getLetterStates}
+                isCompleted={false}
+                selectedIndex={selectedIndex}
+                selectIndex={selectIndex}
+              />
               )}
-        {modo === 'normal' && gameState.gameStatus !== 'playing' && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-            <div className="p-6 bg-[#2d2d2d] rounded-lg border border-[#3d3d3d] shadow-xl min-w-[320px] max-w-full flex flex-col items-center">
-              <div className="space-y-2 text-center">
-                <h3 className="text-2xl font-bold text-[#8b5cf6] font-mono flex items-center justify-center gap-2">
-                  {gameState.gameStatus === 'won' ? (
-                    <>
-                      {gameState.guesses.length === 1 ? (
-                        <>🎉 Parabéns! <span className="ml-2 text-3xl">THE GOAT 🐐</span></>
-                      ) : gameState.guesses.length === gameState.maxAttempts ? (
+            </div>
+            <Keyboard
+              keyboardStates={modo === 'dueto' ? getKeyboardStatesDueto() : modo === 'abracatetra' ? getKeyboardStatesTetra() : getKeyboardStates()}
+              onKeyPress={modo === 'dueto' ? addLetterDueto : modo === 'abracatetra' ? addLetterTetra : addLetterNormal}
+              onDelete={modo === 'dueto' ? removeLetterDueto : modo === 'abracatetra' ? removeLetterTetra : removeLetterNormal}
+              onEnter={modo === 'dueto' ? submitGuessDueto : modo === 'abracatetra' ? submitGuessTetra : submitGuess}
+              disabled={modo === 'dueto'
+                ? dueto.status1 !== 'playing' && dueto.status2 !== 'playing'
+                : modo === 'abracatetra'
+                  ? tetra.status.every(s => s !== 'playing')
+                  : gameState.gameStatus !== 'playing'}
+            />
+            {modo === 'dueto' && (dueto.status1 !== 'playing' && dueto.status2 !== 'playing') && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+                <div className="p-6 bg-[#2d2d2d] rounded-lg border border-[#3d3d3d] shadow-xl min-w-[320px] max-w-full flex flex-col items-center">
+                  <div className="space-y-2 text-center">
+                    <h3 className="text-2xl font-bold text-[#8b5cf6] font-mono flex items-center justify-center gap-2">
+                      {dueto.guesses.length === dueto.maxAttempts ? (
                         <span className="text-3xl">Ufa!</span>
                       ) : (
-                        <>🎉 Parabéns!</>
+                        <>Abracadupla finalizado!</>
                       )}
-                    </>
-                  ) : (
-                    <>😔 Que pena!</>
-                  )}
-                </h3>
-                <p className="text-[#d0d0d0] font-mono">
-                  {gameState.gameStatus === 'won' ? (
-                    <>Você descobriu a palavra em {gameState.guesses.length} tentativa{gameState.guesses.length !== 1 ? 's' : ''}!<br />
-                    Palavra: <span className="font-bold text-[#4ade80]">{palavraCorreta}</span></>
-                  ) : (
-                    <>A palavra era: <span className="font-bold text-[#4ade80]">{palavraCorreta}</span></>
-                  )}
-                </p>
+                    </h3>
+                    <p className="text-[#d0d0d0] font-mono">
+                      Palavra 1: <span className="font-bold text-[#4ade80]">{dueto.word1}</span> - {dueto.status1 === 'won' ? 'Acertou!' : 'Errou!'}<br />
+                      Palavra 2: <span className="font-bold text-[#4ade80]">{dueto.word2}</span> - {dueto.status2 === 'won' ? 'Acertou!' : 'Errou!'}
+                      </p>
+                    </div>
+                  <div className="flex flex-col gap-2 w-full mt-2">
+                    <button
+                      onClick={restartDueto}
+                      className="px-6 py-3 bg-[#8b5cf6] text-white font-mono rounded-lg hover:bg-[#6d28d9] transition-all duration-200"
+                    >
+                      Jogar Novamente
+                    </button>
+                  </div>
+                </div>
               </div>
-              <div className="flex flex-col gap-2 w-full mt-2">
-                <button
-                  onClick={restartGame}
-                  className="px-6 py-3 bg-[#8b5cf6] text-white font-mono rounded-lg hover:bg-[#6d28d9] transition-all duration-200"
-                >
-                  Jogar Novamente
-                </button>
-                <button
-                  onClick={() => fetchMeaning(palavraCorreta)}
-                  className="px-6 py-3 bg-[#4ade80] text-[#1a1a1a] font-mono rounded-lg hover:bg-[#22c55e] transition-all duration-200"
-                >
-                  Ver significado no Wiktionary
-                </button>
+            )}
+            {modo === 'abracatetra' && tetra.status.every(s => s !== 'playing') && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+                <div className="p-6 bg-[#2d2d2d] rounded-lg border border-[#3d3d3d] shadow-xl min-w-[320px] max-w-full flex flex-col items-center">
+                  <div className="space-y-2 text-center">
+                    <h3 className="text-2xl font-bold text-[#8b5cf6] font-mono flex items-center justify-center gap-2">
+                      {tetra.guesses.length === tetra.maxAttempts ? (
+                        <span className="text-3xl">Ufa!</span>
+                      ) : (
+                        <>Abracatetra finalizado!</>
+                      )}
+                    </h3>
+                    {tetra.words.map((word, idx) => (
+                      <p key={idx} className="text-[#d0d0d0] font-mono">
+                        Palavra {idx + 1}: <span className="font-bold text-[#4ade80]">{word}</span> - {tetra.status[idx] === 'won' ? 'Acertou!' : 'Errou!'}
+                      </p>
+                    ))}
+                  </div>
+                  <button
+                    onClick={restartTetra}
+                    className="mt-4 px-6 py-3 bg-[#8b5cf6] text-white font-mono rounded-lg hover:bg-[#6d28d9] transition-all duration-200"
+                  >
+                    Jogar Novamente
+                  </button>
+                </div>
               </div>
-            </div>
-          </div>
-        )}
-        {modoComando && (
-          <>
-            {/* Overlay para capturar foco e impedir interação */}
-            <div
-              tabIndex={0}
-              className="fixed inset-0 z-40 bg-transparent"
-              onClick={e => { e.preventDefault(); inputRef.current?.focus(); }}
-              onFocus={() => inputRef.current?.focus()}
-            />
-            {/* Linha de comando estilo Vim no footer */}
-            <div className="fixed left-0 right-0 bottom-0 z-50 w-full bg-black border-t border-[#8b5cf6] flex items-center px-4 py-2" style={{minHeight: '48px'}}>
-              <span className="text-[#8b5cf6] font-mono text-xl mr-2">:</span>
-              <input
-                ref={inputRef}
-                className="bg-transparent border-none outline-none text-[#d0d0d0] font-mono text-xl w-32"
-                value={comando}
-                onChange={e => setComando(e.target.value)}
-                onKeyDown={processarComando}
-                autoFocus
-                spellCheck={false}
-                placeholder="q!"
-              />
-              <span className="ml-4 text-[#8b5cf6] font-mono text-xs">Digite <b>q!</b> e Enter para reiniciar, <b>Esc</b> para cancelar.</span>
-            </div>
-          </>
-        )}
-        {/* Modal de significado */}
-        {showMeaning && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
-            <div className="bg-[#1a1a1a] border border-[#8b5cf6] rounded-lg p-6 max-w-4xl w-full h-[80vh] flex flex-col">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold text-[#8b5cf6] font-mono">Significado de "{palavraCorreta}"</h2>
-                <button
-                  onClick={() => setShowMeaning(false)}
-                  className="p-2 rounded bg-[#2d2d2d] text-[#d0d0d0] hover:bg-[#3d3d3d] border border-[#3d3d3d] hover:border-[#8b5cf6] transition-colors font-mono"
-                >
-                  ✕
-                </button>
+            )}
+            {modo === 'normal' && gameState.gameStatus !== 'playing' && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+                <div className="p-6 bg-[#2d2d2d] rounded-lg border border-[#3d3d3d] shadow-xl min-w-[320px] max-w-full flex flex-col items-center">
+                  <div className="space-y-2 text-center">
+                    <h3 className="text-2xl font-bold text-[#8b5cf6] font-mono flex items-center justify-center gap-2">
+                      {gameState.gameStatus === 'won' ? (
+                        <>
+                          {gameState.guesses.length === 1 ? (
+                            <>🎉 Parabéns! <span className="ml-2 text-3xl">THE GOAT 🐐</span></>
+                          ) : gameState.guesses.length === gameState.maxAttempts ? (
+                            <span className="text-3xl">Ufa!</span>
+                          ) : (
+                            <>🎉 Parabéns!</>
+                          )}
+                        </>
+                      ) : (
+                        <>😔 Que pena!</>
+                      )}
+                    </h3>
+                    <p className="text-[#d0d0d0] font-mono">
+                      {gameState.gameStatus === 'won' ? (
+                        <>Você descobriu a palavra em {gameState.guesses.length} tentativa{gameState.guesses.length !== 1 ? 's' : ''}!<br />
+                        Palavra: <span className="font-bold text-[#4ade80]">{palavraCorreta}</span></>
+                      ) : (
+                        <>A palavra era: <span className="font-bold text-[#4ade80]">{palavraCorreta}</span></>
+                      )}
+                    </p>
+                  </div>
+                  <div className="flex flex-col gap-2 w-full mt-2">
+                    <button
+                      onClick={restartGame}
+                      className="px-6 py-3 bg-[#8b5cf6] text-white font-mono rounded-lg hover:bg-[#6d28d9] transition-all duration-200"
+                    >
+                      Jogar Novamente
+                    </button>
+                    <button
+                      onClick={() => fetchMeaning(palavraCorreta)}
+                      className="px-6 py-3 bg-[#4ade80] text-[#1a1a1a] font-mono rounded-lg hover:bg-[#22c55e] transition-all duration-200"
+                    >
+                      Ver significado no Wiktionary
+                    </button>
+                  </div>
+                </div>
               </div>
-              
-              <div className="flex-1">
-                <iframe
-                  src={`https://pt.wiktionary.org/wiki/${palavraCorreta.toLowerCase()}`}
-                  className="w-full h-full border border-[#3d3d3d] rounded"
-                  title={`Significado de ${palavraCorreta}`}
+            )}
+            {modoComando && (
+              <>
+                {/* Overlay para capturar foco e impedir interação */}
+                <div
+                  tabIndex={0}
+                  className="fixed inset-0 z-40 bg-transparent"
+                  onClick={e => { e.preventDefault(); inputRef.current?.focus(); }}
+                  onFocus={() => inputRef.current?.focus()}
                 />
+                {/* Linha de comando estilo Vim no footer */}
+                <div className="fixed left-0 right-0 bottom-0 z-50 w-full bg-black border-t border-[#8b5cf6] flex items-center px-4 py-2" style={{minHeight: '48px'}}>
+                  <span className="text-[#8b5cf6] font-mono text-xl mr-2">:</span>
+                  <input
+                    ref={inputRef}
+                    className="bg-transparent border-none outline-none text-[#d0d0d0] font-mono text-xl w-32"
+                    value={comando}
+                    onChange={e => setComando(e.target.value)}
+                    onKeyDown={processarComando}
+                    autoFocus
+                    spellCheck={false}
+                    placeholder="q!"
+                  />
+                  <span className="ml-4 text-[#8b5cf6] font-mono text-xs">Digite <b>q!</b> e Enter para reiniciar, <b>Esc</b> para cancelar.</span>
+                </div>
+              </>
+            )}
+            {/* Modal de significado */}
+            {showMeaning && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
+                <div className="bg-[#1a1a1a] border border-[#8b5cf6] rounded-lg p-6 max-w-4xl w-full h-[80vh] flex flex-col">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xl font-bold text-[#8b5cf6] font-mono">Significado de "{palavraCorreta}"</h2>
+                    <button
+                      onClick={() => setShowMeaning(false)}
+                      className="p-2 rounded bg-[#2d2d2d] text-[#d0d0d0] hover:bg-[#3d3d3d] border border-[#3d3d3d] hover:border-[#8b5cf6] transition-colors font-mono"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  
+                  <div className="flex-1">
+                    <iframe
+                      src={`https://pt.wiktionary.org/wiki/${palavraCorreta.toLowerCase()}`}
+                      className="w-full h-full border border-[#3d3d3d] rounded"
+                      title={`Significado de ${palavraCorreta}`}
+                    />
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-        )}
-      </main>
-      <HelpModal
-        isOpen={showHelp}
-        onClose={() => setShowHelp(false)}
-      />
-      {/* Particles background effect */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
-        <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-purple-500/20 rounded-full animate-pulse" />
-        <div className="absolute top-3/4 right-1/3 w-1 h-1 bg-pink-500/30 rounded-full animate-pulse delay-1000" />
-        <div className="absolute bottom-1/4 left-1/2 w-1.5 h-1.5 bg-purple-400/25 rounded-full animate-pulse delay-500" />
-        <div className="absolute top-1/2 right-1/4 w-1 h-1 bg-pink-400/20 rounded-full animate-pulse delay-700" />
-      </div>
-    </PalavrimLayout>
+            )}
+          </main>
+          <HelpModal
+            isOpen={showHelp}
+            onClose={() => setShowHelp(false)}
+          />
+        </PalavrimLayout>
+      } />
+    </Routes>
   );
 }
 
