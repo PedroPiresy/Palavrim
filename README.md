@@ -57,7 +57,7 @@ O Palavrim é um jogo onde você precisa descobrir a palavra secreta em até 6 t
 
 1. **Clone o repositório:**
    ```bash
-   git clone <url-do-repositorio>
+   git clone https://github.com/PedroPiresy/Palavrim.git
    cd Palavrim
    ```
 2. **Instale as dependências:**
