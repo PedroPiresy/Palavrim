@@ -1,8 +1,9 @@
 # 🎉 Palavrim
 
 Bem-vindo ao **Palavrim**! Um jogo de adivinhação de palavras em português, inspirado no Wordle, mas com um toque brasileiro, modos extras e muita diversão! 🚀
-
-![Logo do Palavrim](public/assets/images/Palavrim.png)
+<p align="center">
+  <img src="public/assets/images/Palavrim.png" alt="Logo do Palavrim" width="200" />
+</p>
 
 ---
 
