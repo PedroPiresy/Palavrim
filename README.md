@@ -5,55 +5,76 @@ Bem-vindo ao **Palavrim**! Um jogo de adivinhação de palavras em português, i
   <img src="public/assets/images/Palavrim.png" alt="Logo do Palavrim" width="200" />
 </p>
 
----
-
-## 🌐 Jogue Agora!
-
-- 👉 [Acesse o Palavrim na Web](https://palavrim.vercel.app)
+[![Deploy Vercel](https://img.shields.io/badge/deploy-vercel-brightgreen?logo=vercel)](https://palavrim.vercel.app)
+[![API Online](https://img.shields.io/badge/api-onrender-blue?logo=dotnet)](https://palavrimapi.onrender.com)
+[![License: MIT](https://img.shields.io/badge/license-MIT-yellow.svg)](LICENSE)
 
 ---
 
-## 🔗 API do Palavrim
+## 📋 Sumário
 
+- [Sobre](#sobre)
+- [Demonstração](#demonstração)
+- [Tecnologias](#tecnologias)
+- [Ambiente](#ambiente)
+- [Como rodar localmente](#como-rodar-localmente)
+- [Testes](#testes)
+- [Deploy](#deploy)
+- [Estrutura do Projeto](#estrutura-do-projeto)
+- [Contribuição](#contribuição)
+- [Licença](#licença)
+- [Contato](#contato)
+- [Roadmap](#roadmap)
+
+---
+
+## 📝 Sobre
+
+O **Palavrim** é um jogo de adivinhação de palavras em português, inspirado no Wordle, com modos extras, interface moderna e comandos estilo Vim. O objetivo é adivinhar a palavra secreta em até 6 tentativas, com feedback visual e dicionário nacional.
+
+---
+
+## 🎮 Demonstração
+
+- 👉 [Jogue agora!](https://palavrim.vercel.app)
 - 🌍 [API Online](https://palavrimapi.onrender.com)
-- 💻 [Repositório da API no GitHub](https://github.com/PedroPiresy/palavrim-api)
 
 ---
 
-## 🛠️ Tecnologias Utilizadas
+## 🚀 Tecnologias
 
 - [React](https://reactjs.org/)
 - [TypeScript](https://www.typescriptlang.org/)
 - [Vite](https://vitejs.dev/)
 - [TailwindCSS](https://tailwindcss.com/)
-- [C#](https://docs.microsoft.com/dotnet/csharp/) e [ASP.NET](https://dotnet.microsoft.com/apps/aspnet) (na API)
+- [Vercel](https://vercel.com/) (deploy)
+- [C#](https://docs.microsoft.com/dotnet/csharp/) e [ASP.NET](https://dotnet.microsoft.com/apps/aspnet) (API)
 
 ---
 
-## ✨ O que é o Palavrim?
+## ⚙️ Ambiente
 
-O Palavrim é um jogo onde você precisa descobrir a palavra secreta em até 6 tentativas. Cada palpite recebe feedback colorido para ajudar na sua próxima jogada. O diferencial? Modos de jogo criativos, interface inspirada no Vim, consulta de significados e uma experiência visual moderna e animada!
+- Node.js >= 18.x
+- npm >= 9.x
+- API: [palavrimapi.onrender.com](https://palavrimapi.onrender.com) (ou local)
+
+### Variáveis de ambiente
+
+Crie um arquivo `.env.local` na raiz do projeto:
+
+```
+VITE_API_BASE_URL=http://localhost:5134
+```
+
+Para produção, use:
+
+```
+VITE_API_BASE_URL=https://palavrimapi.onrender.com
+```
 
 ---
 
-## 🕹️ Principais Features
-
-- 🔤 **Palavras em português**: Todas as palavras são validadas em um dicionário nacional.
-- 📖 **Veja o significado**: Descubra o significado da palavra secreta direto no Wiktionary, sem sair do jogo!
-- 🧑‍🤝‍🧑 **Modos de Jogo**:
-  - **Normal**: O clássico, descubra a palavra do dia ou uma aleatória.
-  - **Abracadupla (Dueto)**: Tente adivinhar duas palavras ao mesmo tempo!
-  - **Abracatetra (Quarteto)**: O desafio supremo, quatro palavras simultâneas!
-- 🟩 **Feedback visual**: Cores e animações indicam letras corretas, presentes ou ausentes.
-- ⌨️ **Teclado virtual**: Digite com o mouse ou teclado físico.
-- 🧙‍♂️ **Comandos estilo Vim**: Reinicie, veja respostas ou use atalhos secretos digitando comandos como `:q!`.
-- 📱 **Layout responsivo**: Jogue no PC ou no celular, com visual moderno e efeitos de partículas.
-- 🔔 **Notificações animadas**: Feedback divertido a cada jogada!
-- 🗓️ **Palavra do dia**: Um novo desafio diário para todos os jogadores.
-
----
-
-## 🚀 Como jogar localmente
+## 🖥️ Como rodar localmente
 
 1. **Clone o repositório:**
    ```bash
@@ -64,15 +85,37 @@ O Palavrim é um jogo onde você precisa descobrir a palavra secreta em até 6 t
    ```bash
    npm install
    ```
-3. **Inicie o servidor de desenvolvimento:**
+3. **Configure o ambiente:**  
+   Crie o arquivo `.env.local` conforme acima.
+4. **Inicie o servidor de desenvolvimento:**
    ```bash
    npm run dev
    ```
-4. Acesse `http://localhost:5173` no seu navegador.
+5. Acesse `http://localhost:5173` no navegador.
+
+---
+
+## 🧪 Testes
+
+> _Ainda não implementado._  
+Sugestão: utilize [Jest](https://jestjs.io/) e [React Testing Library](https://testing-library.com/).
+
+---
+
+## ☁️ Deploy
+
+O deploy é feito automaticamente via [Vercel](https://vercel.com/).  
+Para deploy manual:
+
+```bash
+npm run build
+# Faça upload da pasta dist/ para seu serviço de hospedagem
+```
 
 ---
 
 ## 🗂️ Estrutura do Projeto
+
 ```
 Palavrim/
   ├─ public/
@@ -81,7 +124,6 @@ Palavrim/
   │   ├─ hooks/        # Hooks customizados de lógica
   │   ├─ types/        # Tipos TypeScript
   │   ├─ utils/        # Funções utilitárias e API
-  │   └─ assets/       # Imagens e recursos
   ├─ index.html
   ├─ package.json
   └─ ...
@@ -89,21 +131,35 @@ Palavrim/
 
 ---
 
-## 💡 Exemplos de Interatividade
+## 🤝 Contribuição
 
-- **Descubra o significado:**
-  Após o jogo, clique em "Ver significado no Wiktionary" para aprender mais sobre a palavra!
-- **Use comandos secretos:**
-  Digite `:q!` para reiniciar, ou `:admin` para ver a resposta (modo admin).
-- **Experimente os modos extras:**
-  Clique em "Abracadupla" ou "Abracatetra" no topo para desafios ainda mais insanos!
+1. Faça um fork do projeto
+2. Crie uma branch: `git checkout -b minha-feature`
+3. Commit suas alterações: `git commit -m 'feat: minha nova feature'`
+4. Push para o fork: `git push origin minha-feature`
+5. Abra um Pull Request
 
----
-
-## 🤝 Contribua!
-Sinta-se à vontade para abrir issues ou pull requests com sugestões, melhorias ou correções. Toda ajuda é bem-vinda!
+Sinta-se à vontade para abrir issues ou PRs com sugestões, melhorias ou correções!
 
 ---
 
 ## 📄 Licença
-Este projeto está sob a licença MIT.
+
+Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+
+---
+
+## 📬 Contato
+
+- Pedro Pires — [@PedroPiresy](https://github.com/PedroPiresy)
+- Dúvidas, sugestões ou bugs? Abra uma issue!
+
+---
+
+## 🛣️ Roadmap
+
+- [ ] Modo Abracadupla (Dueto)
+- [ ] Modo Abracatetra (Quarteto)
+- [ ] Responsividade para dispositivos móveis
+
+Fique ligado para novidades e melhorias!
