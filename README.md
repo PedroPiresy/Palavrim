@@ -16,7 +16,7 @@ Bem-vindo ao **Palavrim**! Um jogo de adivinhação de palavras em português, i
 ## 🔗 API do Palavrim
 
 - 🌍 [API Online](https://palavrimapi.onrender.com)
-- 💻 [Repositório da API no GitHub](https://github.com/pedrofracassi/palavrim-api)
+- 💻 [Repositório da API no GitHub](https://github.com/PedroPiresy/palavrim-api)
 
 ---
 
