@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef } from 'react';
 import { LetterState } from '../types/game';
 
 interface GameGridProps {
@@ -23,29 +23,6 @@ export const GameGrid: React.FC<GameGridProps> = ({
   selectIndex
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  // Detecta se é mobile
-  const isMobile = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
-
-  // Foca o input invisível ao clicar no grid (apenas mobile)
-  useEffect(() => {
-    if (isMobile && inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [selectedIndex]);
-
-  // Captura digitação no input invisível e simula evento de teclado
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.toUpperCase();
-    if (value.length === 1 && /^[A-ZÁÉÍÓÚÂÊÔÃÕÇ]$/.test(value)) {
-      const event = new KeyboardEvent('keydown', { key: value });
-      window.dispatchEvent(event);
-      e.target.value = '';
-    } else {
-      e.target.value = '';
-    }
-  };
 
   const getRowData = (rowIndex: number) => {
     if (rowIndex < guesses.length) {
@@ -106,26 +83,6 @@ export const GameGrid: React.FC<GameGridProps> = ({
       tabIndex={0}
       onKeyDown={handleKeyDown}
     >
-      {/* Input invisível só em mobile para acionar teclado virtual */}
-      {isMobile && (
-        <input
-          ref={inputRef}
-          type="text"
-          inputMode="text"
-          maxLength={1}
-          autoFocus
-          style={{
-            position: 'absolute',
-            opacity: 0,
-            pointerEvents: 'none',
-            width: 1,
-            height: 1,
-            zIndex: -1
-          }}
-          onChange={handleInputChange}
-          tabIndex={-1}
-        />
-      )}
       {Array(maxAttempts).fill(0).map((_, rowIndex) => {
         const rowData = getRowData(rowIndex);
         const isCurrentRow = rowIndex === guesses.length;

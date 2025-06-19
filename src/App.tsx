@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { GameHeader } from './components/GameHeader';
 import { GameGrid } from './components/GameGrid';
 import { Keyboard } from './components/Keyboard';
@@ -69,6 +69,13 @@ function App() {
   const [duetoAtivo, setDuetoAtivo] = useState<1 | 2>(1);
 
   const navigate = useNavigate();
+
+  // Redireciona para 404 se for mobile
+  useEffect(() => {
+    if (window.innerWidth <= 768) {
+      navigate('/notfound');
+    }
+  }, [navigate]);
 
   // Iniciar modo Dueto
   const iniciarDueto = async () => {
@@ -374,6 +381,7 @@ function App() {
               onDueto={iniciarDueto}
               onQuarteto={iniciarTetra}
               onHome={voltarParaNormal}
+              onTrainingMode={() => {}}
             />
           </div>
           <main className="flex-1 flex flex-col items-center justify-center max-w-7xl mx-auto w-full py-4">

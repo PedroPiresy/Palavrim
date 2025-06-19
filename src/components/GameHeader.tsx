@@ -7,9 +7,10 @@ interface GameHeaderProps {
   onDueto: () => void;
   onQuarteto: () => void;
   onHome: () => void;
+  onTrainingMode: () => void;
 }
 
-export const GameHeader: React.FC<GameHeaderProps> = ({ onShowHelp, onRestart, onDueto, onQuarteto, onHome }) => {
+export const GameHeader: React.FC<GameHeaderProps> = ({ onShowHelp, onRestart, onDueto, onQuarteto, onHome, onTrainingMode }) => {
   return (
     <header className="w-full bg-[#1a1a1a] p-0 m-0 rounded-b-2xl">
       <div className="w-full max-w-7xl mx-auto px-8 py-4 flex items-center justify-between">
@@ -28,6 +29,13 @@ export const GameHeader: React.FC<GameHeaderProps> = ({ onShowHelp, onRestart, o
         </div>
         
         <div className="flex items-center gap-2">
+          <button
+            onClick={onTrainingMode}
+            className="p-3 rounded bg-[#2d2d2d] text-[#d0d0d0] hover:text-[#8b5cf6] hover:bg-[#3d3d3d] border border-[#3d3d3d] hover:border-[#8b5cf6] transition-all duration-200 font-mono"
+            title="Training Mode"
+          >
+            Training Mode
+          </button>
           <button
             onClick={onDueto}
             className="p-3 rounded bg-[#2d2d2d] text-[#d0d0d0] hover:text-[#8b5cf6] hover:bg-[#3d3d3d] border border-[#3d3d3d] hover:border-[#8b5cf6] transition-all duration-200 font-mono"
