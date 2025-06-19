@@ -6,6 +6,29 @@ Bem-vindo ao **Palavrim**! Um jogo de adivinhação de palavras em português, i
 
 ---
 
+## 🌐 Jogue Agora!
+
+- 👉 [Acesse o Palavrim na Web](https://palavrim.vercel.app)
+
+---
+
+## 🔗 API do Palavrim
+
+- 🌍 [API Online](https://palavrimapi.onrender.com)
+- 💻 [Repositório da API no GitHub](https://github.com/pedrofracassi/palavrim-api)
+
+---
+
+## 🛠️ Tecnologias Utilizadas
+
+- [React](https://reactjs.org/)
+- [TypeScript](https://www.typescriptlang.org/)
+- [Vite](https://vitejs.dev/)
+- [TailwindCSS](https://tailwindcss.com/)
+- [C#](https://docs.microsoft.com/dotnet/csharp/) e [ASP.NET](https://dotnet.microsoft.com/apps/aspnet) (na API)
+
+---
+
 ## ✨ O que é o Palavrim?
 
 O Palavrim é um jogo onde você precisa descobrir a palavra secreta em até 6 tentativas. Cada palpite recebe feedback colorido para ajudar na sua próxima jogada. O diferencial? Modos de jogo criativos, interface inspirada no Vim, consulta de significados e uma experiência visual moderna e animada!
