@@ -4,6 +4,8 @@ export interface GameState {
   currentGuess: string[];
   gameStatus: 'playing' | 'won' | 'lost';
   maxAttempts: number;
+  isSpeedRun?: boolean;
+  speedRunTime?: number;
 }
 
 export interface LetterState {
@@ -20,4 +22,10 @@ export interface ApiResponse {
   success: boolean;
   data?: any;
   error?: string;
+}
+
+export interface SpeedRunStats {
+  time: number;
+  attempts: number;
+  word: string;
 }

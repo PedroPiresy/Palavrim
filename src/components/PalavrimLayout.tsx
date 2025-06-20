@@ -21,12 +21,8 @@ export default function PalavrimLayout({ children }: PalavrimLayoutProps) {
         </div>
 
         {/* Main content area (sem sidebar de linha) */}
-        <div className="flex flex-1">
-          <div className="flex-1 p-8 relative">
-            <div className="flex flex-col items-center justify-center min-h-full space-y-8">
-              {children}
-            </div>
-          </div>
+        <div className="flex-1 flex flex-col p-4">
+          {children}
         </div>
 
         {/* Bottom status bar */}

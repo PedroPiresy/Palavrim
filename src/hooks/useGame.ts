@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { GameState, LetterState, KeyboardKey } from '../types/game';
+import { GameState, LetterState, KeyboardKey, SpeedRunStats } from '../types/game';
 import { api } from '../utils/api';
 
 export const useGame = (showNotification?: (msg: string) => void) => {
@@ -9,12 +9,15 @@ export const useGame = (showNotification?: (msg: string) => void) => {
     currentGuess: Array(5).fill(''),
     gameStatus: 'playing',
     maxAttempts: 6,
+    isSpeedRun: false,
   });
 
   const [wordLength, setWordLength] = useState(5);
   const [loading, setLoading] = useState(true);
   const [palavraCorreta, setPalavraCorreta] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [speedRunTime, setSpeedRunTime] = useState(0);
+  const [isSpeedRunActive, setIsSpeedRunActive] = useState(false);
 
   // Inicializar jogo
   useEffect(() => {
@@ -38,14 +41,51 @@ export const useGame = (showNotification?: (msg: string) => void) => {
         guesses: [],
         currentGuess: Array(tamanho).fill(''),
         gameStatus: 'playing',
+        isSpeedRun: false,
+        speedRunTime: undefined,
       }));
       setSelectedIndex(0);
+      setSpeedRunTime(0);
+      setIsSpeedRunActive(false);
     } catch (error) {
       console.error('Erro ao inicializar jogo:', error);
       notify('Erro ao carregar jogo. Usando modo offline.');
     } finally {
       setLoading(false);
     }
+  };
+
+  // Iniciar modo speed run
+  const startSpeedRun = async () => {
+    setLoading(true);
+    try {
+      const tamanho = await api.getTamanho();
+      const palavra = await api.getPalavraAleatoria();
+      setWordLength(tamanho);
+      setPalavraCorreta(palavra);
+      setGameState(prev => ({
+        ...prev,
+        word: palavra,
+        guesses: [],
+        currentGuess: Array(tamanho).fill(''),
+        gameStatus: 'playing',
+        isSpeedRun: true,
+        speedRunTime: undefined,
+      }));
+      setSelectedIndex(0);
+      setSpeedRunTime(0);
+      setIsSpeedRunActive(true);
+    } catch (error) {
+      console.error('Erro ao iniciar speed run:', error);
+      notify('Erro ao iniciar speed run. Usando modo offline.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Atualizar tempo do speed run
+  const updateSpeedRunTime = (time: number) => {
+    setSpeedRunTime(time);
   };
 
   // Obter estado das letras para um palpite
@@ -144,25 +184,60 @@ export const useGame = (showNotification?: (msg: string) => void) => {
     const isCorrect = resultado.estados.every(estado => estado === 'correct');
     const isGameOver = newGuesses.length >= gameState.maxAttempts;
     let newStatus: 'playing' | 'won' | 'lost' = 'playing';
+    
     if (isCorrect) {
       newStatus = 'won';
-      notify('🎉 Parabéns! Você acertou!');
+      setIsSpeedRunActive(false);
+      const finalTime = speedRunTime;
+      setGameState(prev => ({
+        ...prev,
+        guesses: newGuesses,
+        currentGuess: Array(wordLength).fill(''),
+        gameStatus: newStatus,
+        speedRunTime: finalTime
+      }));
+      if (gameState.isSpeedRun) {
+        notify(`🎉 Parabéns! Você completou em ${formatTime(finalTime)}!`);
+      } else {
+        notify('🎉 Parabéns! Você acertou!');
+      }
     } else if (isGameOver) {
       newStatus = 'lost';
+      setIsSpeedRunActive(false);
+      setGameState(prev => ({
+        ...prev,
+        guesses: newGuesses,
+        currentGuess: Array(wordLength).fill(''),
+        gameStatus: newStatus
+      }));
       notify(`😔 A palavra era: ${palavraCorreta}`);
+    } else {
+      setGameState(prev => ({
+        ...prev,
+        guesses: newGuesses,
+        currentGuess: Array(wordLength).fill(''),
+        gameStatus: newStatus
+      }));
     }
-    setGameState(prev => ({
-      ...prev,
-      guesses: newGuesses,
-      currentGuess: Array(wordLength).fill(''),
-      gameStatus: newStatus
-    }));
     setSelectedIndex(0);
+  };
+
+  // Formatar tempo para exibição
+  const formatTime = (ms: number): string => {
+    const minutes = Math.floor(ms / 60000);
+    const seconds = Math.floor((ms % 60000) / 1000);
+    const centiseconds = Math.floor((ms % 1000) / 10);
+
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${centiseconds.toString().padStart(2, '0')}`;
   };
 
   // Reiniciar jogo
   const restartGame = () => {
-    initializeGame();
+    if (gameState.isSpeedRun) {
+      startSpeedRun();
+    } else {
+      initializeGame();
+    }
   };
 
   return {
@@ -177,6 +252,11 @@ export const useGame = (showNotification?: (msg: string) => void) => {
     submitGuess,
     restartGame,
     selectedIndex,
-    selectIndex
+    selectIndex,
+    startSpeedRun,
+    updateSpeedRunTime,
+    isSpeedRunActive,
+    speedRunTime,
+    formatTime
   };
 };

@@ -3,9 +3,10 @@ import { GameHeader } from './components/GameHeader';
 import { GameGrid } from './components/GameGrid';
 import { Keyboard } from './components/Keyboard';
 import { HelpModal } from './components/HelpModal';
+import { SpeedRunHelpModal } from './components/SpeedRunHelpModal';
 import { Notification } from './components/Notification';
 import { useGame } from './hooks/useGame';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Home, Play } from 'lucide-react';
 import { api } from './utils/api';
 import PalavrimLayout from './components/PalavrimLayout';
 import { Routes, Route, useNavigate } from 'react-router-dom';
@@ -32,11 +33,17 @@ function App() {
     submitGuess,
     restartGame,
     selectedIndex,
-    selectIndex
+    selectIndex,
+    startSpeedRun,
+    updateSpeedRunTime,
+    isSpeedRunActive,
+    speedRunTime,
+    formatTime
   } = useGame(showNotification);
 
   const [showHelp, setShowHelp] = useState(true);
-  const [modo, setModo] = useState<'normal' | 'dueto' | 'abracatetra'>('normal');
+  const [showSpeedRunHelp, setShowSpeedRunHelp] = useState(false);
+  const [modo, setModo] = useState<'normal' | 'dueto' | 'abracatetra' | 'speedrun'>('normal');
 
   // Estado para Dueto
   const [dueto, setDueto] = useState({
@@ -76,6 +83,18 @@ function App() {
       navigate('/notfound');
     }
   }, [navigate]);
+
+  // Iniciar modo Speed Run
+  const iniciarSpeedRun = () => {
+    setShowSpeedRunHelp(true);
+  };
+
+  // Começar Speed Run
+  const comecarSpeedRun = async () => {
+    setShowSpeedRunHelp(false);
+    setModo('speedrun');
+    await startSpeedRun();
+  };
 
   // Iniciar modo Dueto
   const iniciarDueto = async () => {
@@ -205,20 +224,20 @@ function App() {
     });
     return result;
   };
+
   const getKeyboardStatesDueto = () => {
     const keyStates: { [key: string]: 'correct' | 'present' | 'absent' | 'unused' } = {};
     dueto.guesses.forEach(guess => {
-      [dueto.word1, dueto.word2].forEach(word => {
-        const letterStates = getLetterStatesDueto(guess, word);
-        letterStates.forEach(({ letter, status }) => {
-          if (status === 'correct') {
-            keyStates[letter] = 'correct';
-          } else if (status === 'present' && keyStates[letter] !== 'correct') {
-            keyStates[letter] = 'present';
-          } else if (status === 'absent' && !keyStates[letter]) {
-            keyStates[letter] = 'absent';
-          }
-        });
+      const letterStates1 = getLetterStatesDueto(guess, dueto.word1);
+      const letterStates2 = getLetterStatesDueto(guess, dueto.word2);
+      [...letterStates1, ...letterStates2].forEach(({ letter, status }) => {
+        if (status === 'correct') {
+          keyStates[letter] = 'correct';
+        } else if (status === 'present' && keyStates[letter] !== 'correct') {
+          keyStates[letter] = 'present';
+        } else if (status === 'absent' && !keyStates[letter]) {
+          keyStates[letter] = 'absent';
+        }
       });
     });
     const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -228,7 +247,6 @@ function App() {
     }));
   };
 
-  // Funções para estados das letras e teclado no Abracatetra
   const getLetterStatesTetra = (guess: string, word: string) => {
     const result: any[] = [];
     const wordArray = word.split('');
@@ -253,6 +271,7 @@ function App() {
     });
     return result;
   };
+
   const getKeyboardStatesTetra = () => {
     const keyStates: { [key: string]: 'correct' | 'present' | 'absent' | 'unused' } = {};
     tetra.guesses.forEach(guess => {
@@ -276,26 +295,23 @@ function App() {
     }));
   };
 
-  // Handler para voltar ao modo normal
   const voltarParaNormal = () => {
     setModo('normal');
     restartGame();
   };
 
-  // Handler para ativar modo comando ao clicar no botão restart
   const ativarModoComando = () => {
     setModoComando(true);
-    setComando('');
-    setTimeout(() => inputRef.current?.focus(), 100);
+    setTimeout(() => {
+      inputRef.current?.focus();
+    }, 100);
   };
 
-  // Handler para sair do modo comando
   const sairModoComando = () => {
     setModoComando(false);
     setComando('');
   };
 
-  // Handler para processar comando
   const processarComando = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -320,34 +336,49 @@ function App() {
     }
   };
 
-  // Listener global para Shift+; (:) abrir o prompt
-  React.useEffect(() => {
+  useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const active = document.activeElement;
       const isInput = active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA');
       const isVimCommand = (e.shiftKey && e.key === ';') || e.key === ':';
+      
       if (!modoComando && isVimCommand && !isInput) {
         setModoComando(true);
         setComando('');
-        setTimeout(() => inputRef.current?.focus(), 100);
+        setTimeout(() => {
+          inputRef.current?.focus();
+        }, 100);
         e.preventDefault();
       } else if (modoComando && isVimCommand) {
         inputRef.current?.focus();
         e.preventDefault();
+      } else if (modoComando && e.key === 'Escape') {
+        sairModoComando();
       }
     };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
   }, [modoComando]);
 
-  // Para o modo normal, sobrescrever addLetter/removeLetter para checar modoComando
   const addLetterNormal = (letter: string) => {
     if (modoComando) return;
-    addLetter(letter);
+    if (modo === 'speedrun') {
+      addLetter(letter);
+    } else {
+      addLetter(letter);
+    }
   };
+
   const removeLetterNormal = () => {
     if (modoComando) return;
-    removeLetter();
+    if (modo === 'speedrun') {
+      removeLetter();
+    } else {
+      removeLetter();
+    }
   };
 
   const [showMeaning, setShowMeaning] = useState(false);
@@ -382,9 +413,10 @@ function App() {
               onQuarteto={iniciarTetra}
               onHome={voltarParaNormal}
               onTrainingMode={() => {}}
+              onSpeedRun={iniciarSpeedRun}
             />
           </div>
-          <main className="flex-1 flex flex-col items-center justify-center max-w-7xl mx-auto w-full py-4">
+          <main className="flex-1 flex flex-col items-center justify-center gap-4 max-w-7xl mx-auto w-full">
             {notification && (
               <div className="w-full flex justify-center mb-4">
                 <Notification
@@ -397,7 +429,7 @@ function App() {
                 />
               </div>
             )}
-            <div className="w-full flex flex-col md:flex-row md:gap-8 items-center justify-center space-y-6 md:space-y-0">
+            <div className="w-full flex flex-col md:flex-row md:gap-8 items-center justify-center">
               {modo === 'dueto' ? (
                 <>
                   <GameGrid
@@ -447,6 +479,9 @@ function App() {
                 isCompleted={false}
                 selectedIndex={selectedIndex}
                 selectIndex={selectIndex}
+                isSpeedRun={modo === 'speedrun'}
+                isSpeedRunActive={isSpeedRunActive}
+                onTimeUpdate={updateSpeedRunTime}
               />
               )}
             </div>
@@ -514,7 +549,7 @@ function App() {
                 </div>
               </div>
             )}
-            {modo === 'normal' && gameState.gameStatus !== 'playing' && (
+            {(modo === 'normal' || modo === 'speedrun') && gameState.gameStatus !== 'playing' && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
                 <div className="p-6 bg-[#2d2d2d] rounded-lg border border-[#3d3d3d] shadow-xl min-w-[320px] max-w-full flex flex-col items-center">
                   <div className="space-y-2 text-center">
@@ -535,27 +570,56 @@ function App() {
                     </h3>
                     <p className="text-[#d0d0d0] font-mono">
                       {gameState.gameStatus === 'won' ? (
-                        <>Você descobriu a palavra em {gameState.guesses.length} tentativa{gameState.guesses.length !== 1 ? 's' : ''}!<br />
-                        Palavra: <span className="font-bold text-[#4ade80]">{palavraCorreta}</span></>
+                        <>
+                          {modo === 'speedrun' && gameState.speedRunTime ? (
+                            <>Você completou em {formatTime(gameState.speedRunTime)}!<br />
+                            Tentativas: {gameState.guesses.length}<br />
+                            Palavra: <span className="font-bold text-[#4ade80]">{palavraCorreta}</span></>
+                          ) : (
+                            <>Você descobriu a palavra em {gameState.guesses.length} tentativa{gameState.guesses.length !== 1 ? 's' : ''}!<br />
+                            Palavra: <span className="font-bold text-[#4ade80]">{palavraCorreta}</span></>
+                          )}
+                        </>
                       ) : (
                         <>A palavra era: <span className="font-bold text-[#4ade80]">{palavraCorreta}</span></>
                       )}
                     </p>
                   </div>
-                  <div className="flex flex-col gap-2 w-full mt-2">
-                    <button
-                      onClick={restartGame}
-                      className="px-6 py-3 bg-[#8b5cf6] text-white font-mono rounded-lg hover:bg-[#6d28d9] transition-all duration-200"
-                    >
-                      Jogar Novamente
-                    </button>
-                    <button
-                      onClick={() => fetchMeaning(palavraCorreta)}
-                      className="px-6 py-3 bg-[#4ade80] text-[#1a1a1a] font-mono rounded-lg hover:bg-[#22c55e] transition-all duration-200"
-                    >
-                      Ver significado no Wiktionary
-                    </button>
-                  </div>
+                  {modo === 'speedrun' ? (
+                    <div className="pt-4 flex flex-col sm:flex-row gap-3 w-full">
+                      <button
+                        onClick={voltarParaNormal}
+                        className="flex-1 py-3 px-5 rounded-lg bg-[#2d2d2d] text-[#d0d0d0] font-bold text-base hover:bg-[#3d3d3d] border border-[#3d3d3d] hover:border-[#8b5cf6] transition-all duration-200 flex items-center justify-center gap-2"
+                      >
+                        <Home size={18} />
+                        Modo Normal
+                      </button>
+                      <button
+                        onClick={restartGame}
+                        className="flex-1 py-3 px-5 rounded-lg bg-gradient-to-r from-[#8b5cf6] to-[#a855f7] text-white font-bold text-base hover:from-[#7c3aed] hover:to-[#9333ea] transition-all duration-200 flex items-center justify-center gap-2 whitespace-nowrap"
+                      >
+                        <Play size={18} />
+                        Jogar Novamente
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-2 w-full mt-2">
+                      <button
+                        onClick={restartGame}
+                        className="px-6 py-3 bg-[#8b5cf6] text-white font-mono rounded-lg hover:bg-[#6d28d9] transition-all duration-200"
+                      >
+                        Jogar Novamente
+                      </button>
+                      {gameState.gameStatus === 'won' && (
+                        <button
+                          onClick={() => fetchMeaning(palavraCorreta)}
+                          className="px-6 py-3 bg-[#4ade80] text-[#1a1a1a] font-mono rounded-lg hover:bg-[#22c55e] transition-all duration-200"
+                        >
+                          Ver significado no Wiktionary
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -613,6 +677,15 @@ function App() {
           <HelpModal
             isOpen={showHelp}
             onClose={() => setShowHelp(false)}
+          />
+          <SpeedRunHelpModal
+            isOpen={showSpeedRunHelp}
+            onClose={() => setShowSpeedRunHelp(false)}
+            onStart={comecarSpeedRun}
+            onNormalMode={() => {
+              setShowSpeedRunHelp(false);
+              voltarParaNormal();
+            }}
           />
         </PalavrimLayout>
       } />

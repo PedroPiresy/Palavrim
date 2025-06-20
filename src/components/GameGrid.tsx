@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { LetterState } from '../types/game';
+import { Timer } from './Timer';
 
 interface GameGridProps {
   guesses: string[];
@@ -10,6 +11,9 @@ interface GameGridProps {
   isCompleted: boolean;
   selectedIndex: number;
   selectIndex: (index: number) => void;
+  isSpeedRun?: boolean;
+  isSpeedRunActive?: boolean;
+  onTimeUpdate?: (time: number) => void;
 }
 
 export const GameGrid: React.FC<GameGridProps> = ({
@@ -20,7 +24,10 @@ export const GameGrid: React.FC<GameGridProps> = ({
   getLetterStates,
   isCompleted,
   selectedIndex,
-  selectIndex
+  selectIndex,
+  isSpeedRun = false,
+  isSpeedRunActive = false,
+  onTimeUpdate
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -101,45 +108,58 @@ export const GameGrid: React.FC<GameGridProps> = ({
   };
 
   return (
-    <div
-      ref={containerRef}
-      className={`grid-componente flex flex-col gap-2 p-6 ${isCompleted ? 'grid-completed' : ''} outline-none focus:ring-2 focus:ring-purple-500 rounded-lg`}
-      tabIndex={0}
-      onKeyDown={handleKeyDown}
-      aria-label="Grade do jogo"
-      role="grid"
-    >
-      {Array(maxAttempts).fill(0).map((_, rowIndex) => {
-        const rowData = getRowData(rowIndex);
-        const isCurrentRow = rowIndex === guesses.length;
-        
-        return (
-          <div key={rowIndex} className="flex gap-2 justify-center">
-            {rowData.map((cell, cellIndex) => {
-              const isSelected = isCurrentRow && cellIndex === selectedIndex;
-              return (
-                <div
-                  key={cellIndex}
-                  className={getCellClass(cell.status, isCurrentRow, isSelected)}
-                  style={{
-                    animationDelay: rowIndex < guesses.length ? `${cellIndex * 100}ms` : '0ms'
-                  }}
-                  onClick={isCurrentRow ? () => {
-                    selectIndex(cellIndex);
-                    containerRef.current?.focus();
-                  } : undefined}
-                  tabIndex={isCurrentRow ? 0 : -1}
-                  role="gridcell"
-                  aria-selected={isSelected}
-                  aria-label={`Célula ${cellIndex + 1} da linha ${rowIndex + 1}${cell.letter ? `: ${cell.letter}` : ''}`}
-                >
-                  {cell.letter}
-                </div>
-              );
-            })}
-          </div>
-        );
-      })}
+    <div className="flex flex-col items-center gap-4">
+      {/* Cronômetro do Speed Run */}
+      {isSpeedRun && (
+        <div className="w-full flex justify-center">
+          <Timer 
+            isRunning={isSpeedRunActive} 
+            onTimeUpdate={onTimeUpdate}
+            className="bg-[#2d2d2d] px-6 py-3 rounded-lg border border-[#3d3d3d]"
+          />
+        </div>
+      )}
+      
+      <div
+        ref={containerRef}
+        className={`grid-componente flex flex-col gap-2 p-6 ${isCompleted ? 'grid-completed' : ''} outline-none focus:ring-2 focus:ring-purple-500 rounded-lg`}
+        tabIndex={0}
+        onKeyDown={handleKeyDown}
+        aria-label="Grade do jogo"
+        role="grid"
+      >
+        {Array(maxAttempts).fill(0).map((_, rowIndex) => {
+          const rowData = getRowData(rowIndex);
+          const isCurrentRow = rowIndex === guesses.length;
+          
+          return (
+            <div key={rowIndex} className="flex gap-2 justify-center">
+              {rowData.map((cell, cellIndex) => {
+                const isSelected = isCurrentRow && cellIndex === selectedIndex;
+                return (
+                  <div
+                    key={cellIndex}
+                    className={getCellClass(cell.status, isCurrentRow, isSelected)}
+                    style={{
+                      animationDelay: rowIndex < guesses.length ? `${cellIndex * 100}ms` : '0ms'
+                    }}
+                    onClick={isCurrentRow ? () => {
+                      selectIndex(cellIndex);
+                      containerRef.current?.focus();
+                    } : undefined}
+                    tabIndex={isCurrentRow ? 0 : -1}
+                    role="gridcell"
+                    aria-selected={isSelected}
+                    aria-label={`Célula ${cellIndex + 1} da linha ${rowIndex + 1}${cell.letter ? `: ${cell.letter}` : ''}`}
+                  >
+                    {cell.letter}
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 };
