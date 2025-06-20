@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { GameState, LetterState, KeyboardKey, SpeedRunStats } from '../types/game';
 import { api } from '../utils/api';
+import { addGameResult } from '../utils/stats';
 
 export const useGame = (showNotification?: (msg: string) => void) => {
   const [gameState, setGameState] = useState<GameState>({
@@ -187,38 +188,32 @@ export const useGame = (showNotification?: (msg: string) => void) => {
     
     if (isCorrect) {
       newStatus = 'won';
-      setIsSpeedRunActive(false);
-      const finalTime = speedRunTime;
-      setGameState(prev => ({
-        ...prev,
-        guesses: newGuesses,
-        currentGuess: Array(wordLength).fill(''),
-        gameStatus: newStatus,
-        speedRunTime: finalTime
-      }));
       if (gameState.isSpeedRun) {
+        setIsSpeedRunActive(false);
+        const finalTime = speedRunTime;
+        setGameState(prev => ({ ...prev, speedRunTime: finalTime }));
         notify(`🎉 Parabéns! Você completou em ${formatTime(finalTime)}!`);
       } else {
         notify('🎉 Parabéns! Você acertou!');
+        addGameResult('win', newGuesses.length);
       }
     } else if (isGameOver) {
       newStatus = 'lost';
-      setIsSpeedRunActive(false);
-      setGameState(prev => ({
-        ...prev,
-        guesses: newGuesses,
-        currentGuess: Array(wordLength).fill(''),
-        gameStatus: newStatus
-      }));
+      if (gameState.isSpeedRun) {
+        setIsSpeedRunActive(false);
+      } else {
+        addGameResult('loss', newGuesses.length);
+      }
       notify(`😔 A palavra era: ${palavraCorreta}`);
-    } else {
-      setGameState(prev => ({
-        ...prev,
-        guesses: newGuesses,
-        currentGuess: Array(wordLength).fill(''),
-        gameStatus: newStatus
-      }));
     }
+
+    setGameState(prev => ({
+      ...prev,
+      guesses: newGuesses,
+      currentGuess: Array(wordLength).fill(''),
+      gameStatus: newStatus
+    }));
+
     setSelectedIndex(0);
   };
 

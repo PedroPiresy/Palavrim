@@ -1,3 +1,92 @@
+# 🧙‍♂️ Palavrim
+
+Palavrim é uma releitura moderna e cheia de funcionalidades do clássico jogo de adivinhar palavras, inspirado em jogos como Wordle e Termo. Desenvolvido com React, Vite, TypeScript e Tailwind CSS, ele oferece uma experiência de jogo fluida, responsiva e visualmente agradável.
+
+![Palavrim Screenshot](https://i.imgur.com/example.png) 
+*Substitua o link acima pela captura de tela do seu projeto.*
+
+## ✨ Funcionalidades Principais
+
+- **Modo de Jogo Clássico**: Adivinhe a palavra do dia em até 6 tentativas.
+- **Modo Speed Run**: Teste sua velocidade! Um cronômetro registra o seu tempo para resolver o desafio o mais rápido possível.
+- **Modos de Jogo Múltiplos**:
+  - **Dueto (Abracadupla)**: Adivinhe duas palavras simultaneamente.
+  - **Quarteto (Abracatetra)**: Desafie-se a adivinhar quatro palavras ao mesmo tempo.
+- **Progresso Salvo no Navegador**:
+  - Suas estatísticas de jogo são salvas localmente no seu navegador.
+  - Acompanhe seu número de jogos, percentual de vitórias, sequência atual e melhor sequência.
+  - Um gráfico de distribuição de tentativas mostra seu desempenho.
+- **Integração com o Wiktionary**: Após descobrir a palavra, você pode ver seu significado diretamente no Wiktionary.
+- **Modo Terminal Estilo Vim**:
+  - Pressione `Shift + :` para ativar o modo de comando.
+  - Use `q!` para reiniciar o jogo.
+  - Use `admin` para ver a resposta (para fins de desenvolvimento).
+- **Interface Moderna e Responsiva**:
+  - Design limpo e minimalista, com tema escuro.
+  - Componentes reutilizáveis e bem-estruturados.
+  - Ícones da biblioteca `lucide-react`.
+
+## 🚀 Tecnologias Utilizadas
+
+- **Frontend**: [React](https://reactjs.org/)
+- **Build Tool**: [Vite](https://vitejs.dev/)
+- **Linguagem**: [TypeScript](https://www.typescriptlang.org/)
+- **Estilização**: [Tailwind CSS](https://tailwindcss.com/)
+- **Ícones**: [Lucide React](https://lucide.dev/)
+
+## 🛠️ Como Executar Localmente
+
+Siga os passos abaixo para executar o projeto na sua máquina.
+
+**Pré-requisitos:**
+- [Node.js](https://nodejs.org/) (versão 18 ou superior)
+- [npm](https://www.npmjs.com/) ou [Yarn](https://yarnpkg.com/)
+
+**Passos:**
+
+1.  **Clone o repositório:**
+    ```bash
+    git clone https://github.com/seu-usuario/palavrim.git
+    cd palavrim
+    ```
+
+2.  **Instale as dependências:**
+    ```bash
+    npm install
+    ```
+    *ou, se você usa Yarn:*
+    ```bash
+    yarn install
+    ```
+
+3.  **Execute o servidor de desenvolvimento:**
+    ```bash
+    npm run dev
+    ```
+    *ou, com Yarn:*
+    ```bash
+    yarn dev
+    ```
+
+4.  **Abra no navegador:**
+    Acesse `http://localhost:5173` (ou a porta indicada no seu terminal) para ver o jogo em ação.
+
+## 📁 Estrutura dos Componentes
+
+- **`src/components`**: Contém todos os componentes reutilizáveis da interface.
+  - `GameHeader.tsx`: O cabeçalho da aplicação com os botões de navegação.
+  - `GameGrid.tsx`: A grade onde as palavras são exibidas.
+  - `Keyboard.tsx`: O teclado virtual para entrada de letras.
+  - `StatsModal.tsx`: O modal que exibe as estatísticas do jogador.
+  - `HelpModal.tsx`: O modal de ajuda com as instruções do jogo.
+- **`src/hooks`**:
+  - `useGame.ts`: O coração da lógica do jogo, gerenciando o estado, palpites e resultados.
+- **`src/utils`**:
+  - `api.ts`: Funções para se comunicar com a API (se houver).
+  - `stats.ts`: Módulo para gerenciar o salvamento e carregamento das estatísticas no `localStorage`.
+- **`src/types`**:
+  - `game.ts`: Definições de tipos TypeScript usadas em toda a aplicação.
+
 # 🎉 Palavrim
 
 Bem-vindo ao **Palavrim**! Um jogo de adivinhação de palavras em português, inspirado no Wordle, mas com um toque brasileiro, modos extras e muita diversão! 🚀
