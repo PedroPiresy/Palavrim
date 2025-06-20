@@ -4,13 +4,15 @@ import { GameGrid } from './components/GameGrid';
 import { Keyboard } from './components/Keyboard';
 import { HelpModal } from './components/HelpModal';
 import { SpeedRunHelpModal } from './components/SpeedRunHelpModal';
+import { StatsModal } from './components/StatsModal';
 import { Notification } from './components/Notification';
 import { useGame } from './hooks/useGame';
-import { Loader2, Home, Play } from 'lucide-react';
+import { Loader2, Home, Play, BookOpen, BarChartHorizontal } from 'lucide-react';
 import { api } from './utils/api';
 import PalavrimLayout from './components/PalavrimLayout';
 import { Routes, Route, useNavigate } from 'react-router-dom';
 import NotFound from './NotFound';
+import { GameStats, loadStats, getInitialStats } from './utils/stats';
 
 function App() {
   const [notification, setNotification] = useState<string>('');
@@ -43,6 +45,8 @@ function App() {
 
   const [showHelp, setShowHelp] = useState(true);
   const [showSpeedRunHelp, setShowSpeedRunHelp] = useState(false);
+  const [showStats, setShowStats] = useState(false);
+  const [stats, setStats] = useState<GameStats>(getInitialStats());
   const [modo, setModo] = useState<'normal' | 'dueto' | 'abracatetra' | 'speedrun'>('normal');
 
   // Estado para Dueto
@@ -387,6 +391,10 @@ function App() {
     setShowMeaning(true);
   };
 
+  useEffect(() => {
+    setStats(loadStats());
+  }, []);
+
   if (loading || dueto.loading || tetra.loading) {
     return (
       <div className="min-h-screen bg-[#1a1a1a] flex items-center justify-center">
@@ -408,11 +416,13 @@ function App() {
           <div className="w-full max-w-full m-0 p-0">
             <GameHeader
               onShowHelp={() => setShowHelp(true)}
-              onRestart={ativarModoComando}
+              onShowStats={() => {
+                setStats(loadStats());
+                setShowStats(true);
+              }}
               onDueto={iniciarDueto}
               onQuarteto={iniciarTetra}
               onHome={voltarParaNormal}
-              onTrainingMode={() => {}}
               onSpeedRun={iniciarSpeedRun}
             />
           </div>
@@ -515,8 +525,9 @@ function App() {
                   <div className="flex flex-col gap-2 w-full mt-2">
                     <button
                       onClick={restartDueto}
-                      className="px-6 py-3 bg-[#8b5cf6] text-white font-mono rounded-lg hover:bg-[#6d28d9] transition-all duration-200"
+                      className="w-full py-3 px-5 rounded-lg bg-[#8b5cf6] text-white font-bold text-base hover:bg-[#6d28d9] transition-all duration-200 flex items-center justify-center gap-2"
                     >
+                      <Play size={18} />
                       Jogar Novamente
                     </button>
                   </div>
@@ -542,8 +553,9 @@ function App() {
                   </div>
                   <button
                     onClick={restartTetra}
-                    className="mt-4 px-6 py-3 bg-[#8b5cf6] text-white font-mono rounded-lg hover:bg-[#6d28d9] transition-all duration-200"
+                    className="mt-4 w-full py-3 px-5 rounded-lg bg-[#8b5cf6] text-white font-bold text-base hover:bg-[#6d28d9] transition-all duration-200 flex items-center justify-center gap-2"
                   >
+                    <Play size={18} />
                     Jogar Novamente
                   </button>
                 </div>
@@ -586,35 +598,46 @@ function App() {
                     </p>
                   </div>
                   {modo === 'speedrun' ? (
-                    <div className="pt-4 flex flex-col sm:flex-row gap-3 w-full">
+                    <div className="flex flex-col gap-3 w-full pt-4">
+                      <div className="flex flex-col sm:flex-row gap-3 w-full">
+                        <button
+                          onClick={voltarParaNormal}
+                          className="flex-1 py-3 px-5 rounded-lg bg-[#2d2d2d] text-[#d0d0d0] font-bold text-base hover:bg-[#3d3d3d] border border-[#3d3d3d] hover:border-[#8b5cf6] transition-all duration-200 flex items-center justify-center gap-2"
+                        >
+                          <Home size={18} />
+                          Modo Normal
+                        </button>
+                        <button
+                          onClick={restartGame}
+                          className="flex-1 py-3 px-5 rounded-lg bg-gradient-to-r from-[#8b5cf6] to-[#a855f7] text-white font-bold text-base hover:from-[#7c3aed] hover:to-[#9333ea] transition-all duration-200 flex items-center justify-center gap-2 whitespace-nowrap"
+                        >
+                          <Play size={18} />
+                          Jogar Novamente
+                        </button>
+                      </div>
                       <button
-                        onClick={voltarParaNormal}
-                        className="flex-1 py-3 px-5 rounded-lg bg-[#2d2d2d] text-[#d0d0d0] font-bold text-base hover:bg-[#3d3d3d] border border-[#3d3d3d] hover:border-[#8b5cf6] transition-all duration-200 flex items-center justify-center gap-2"
+                        onClick={() => fetchMeaning(palavraCorreta)}
+                        className="w-full py-3 px-5 rounded-lg bg-[#4ade80] text-[#1a1a1a] font-bold text-base hover:bg-[#22c55e] transition-all duration-200 flex items-center justify-center gap-2"
                       >
-                        <Home size={18} />
-                        Modo Normal
-                      </button>
-                      <button
-                        onClick={restartGame}
-                        className="flex-1 py-3 px-5 rounded-lg bg-gradient-to-r from-[#8b5cf6] to-[#a855f7] text-white font-bold text-base hover:from-[#7c3aed] hover:to-[#9333ea] transition-all duration-200 flex items-center justify-center gap-2 whitespace-nowrap"
-                      >
-                        <Play size={18} />
-                        Jogar Novamente
+                        <BookOpen size={18} />
+                        Ver significado no Wiktionary
                       </button>
                     </div>
                   ) : (
-                    <div className="flex flex-col gap-2 w-full mt-2">
+                    <div className="flex flex-col gap-3 w-full pt-4">
                       <button
                         onClick={restartGame}
-                        className="px-6 py-3 bg-[#8b5cf6] text-white font-mono rounded-lg hover:bg-[#6d28d9] transition-all duration-200"
+                        className="w-full py-3 px-5 rounded-lg bg-[#8b5cf6] text-white font-bold text-base hover:bg-[#6d28d9] transition-all duration-200 flex items-center justify-center gap-2"
                       >
+                        <Play size={18} />
                         Jogar Novamente
                       </button>
                       {gameState.gameStatus === 'won' && (
                         <button
                           onClick={() => fetchMeaning(palavraCorreta)}
-                          className="px-6 py-3 bg-[#4ade80] text-[#1a1a1a] font-mono rounded-lg hover:bg-[#22c55e] transition-all duration-200"
+                          className="w-full py-3 px-5 rounded-lg bg-[#4ade80] text-[#1a1a1a] font-bold text-base hover:bg-[#22c55e] transition-all duration-200 flex items-center justify-center gap-2"
                         >
+                          <BookOpen size={18} />
                           Ver significado no Wiktionary
                         </button>
                       )}
@@ -673,19 +696,24 @@ function App() {
                 </div>
               </div>
             )}
+            <SpeedRunHelpModal
+              isOpen={showSpeedRunHelp}
+              onClose={() => setShowSpeedRunHelp(false)}
+              onStart={comecarSpeedRun}
+              onNormalMode={() => {
+                setShowSpeedRunHelp(false);
+                voltarParaNormal();
+              }}
+            />
+            <StatsModal
+              isOpen={showStats}
+              onClose={() => setShowStats(false)}
+              stats={stats}
+            />
           </main>
           <HelpModal
             isOpen={showHelp}
             onClose={() => setShowHelp(false)}
-          />
-          <SpeedRunHelpModal
-            isOpen={showSpeedRunHelp}
-            onClose={() => setShowSpeedRunHelp(false)}
-            onStart={comecarSpeedRun}
-            onNormalMode={() => {
-              setShowSpeedRunHelp(false);
-              voltarParaNormal();
-            }}
           />
         </PalavrimLayout>
       } />
