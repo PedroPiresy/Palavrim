@@ -1,9 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { GameState, LetterState, KeyboardKey, SpeedRunStats } from '../types/game';
 import { api } from '../utils/api';
-import { addGameResult } from '../utils/stats';
 
-export const useGame = (showNotification?: (msg: string) => void) => {
+export type GameEvent = 'invalidWord' | 'duplicateGuess';
+
+export const useGame = (
+  showNotification?: (msg: string) => void,
+  onGameEvent?: (event: GameEvent, ...args: any[]) => void
+) => {
   const [gameState, setGameState] = useState<GameState>({
     word: '',
     guesses: [],
@@ -92,6 +96,7 @@ export const useGame = (showNotification?: (msg: string) => void) => {
   // Obter estado das letras para um palpite
   const getLetterStates = useCallback((guess: string): LetterState[] => {
     const { word } = gameState;
+    if (!word) return [];
     const result: LetterState[] = [];
     const wordArray = word.split('');
     const guessArray = guess.split('');
@@ -116,6 +121,31 @@ export const useGame = (showNotification?: (msg: string) => void) => {
     return result;
   }, [gameState.word]);
 
+  const checkGuessIsAllGray = useCallback((guess: string): boolean => {
+    const states = getLetterStates(guess);
+    return states.length > 0 && states.every(s => s.status === 'absent');
+  }, [getLetterStates]);
+
+  const checkGuessHasPresentWithoutCorrect = useCallback((guess: string): boolean => {
+    const states = getLetterStates(guess);
+    if (states.length === 0) return false;
+
+    const hasPresent = states.some(s => s.status === 'present');
+    const hasCorrect = states.some(s => s.status === 'correct');
+    
+    return hasPresent && !hasCorrect;
+  }, [getLetterStates]);
+
+  const checkGuessHasPresentAndCorrect = useCallback((guess: string): boolean => {
+    const states = getLetterStates(guess);
+    if (states.length === 0) return false;
+
+    const hasPresent = states.some(s => s.status === 'present');
+    const hasCorrect = states.some(s => s.status === 'correct');
+    
+    return hasPresent && hasCorrect;
+  }, [getLetterStates]);
+
   // Obter estado do teclado
   const getKeyboardStates = useCallback((): KeyboardKey[] => {
     const keyStates: { [key: string]: 'correct' | 'present' | 'absent' | 'unused' } = {};
@@ -137,6 +167,64 @@ export const useGame = (showNotification?: (msg: string) => void) => {
       status: keyStates[letter] || 'unused'
     }));
   }, [gameState.guesses, getLetterStates]);
+
+  const getReveleableLetters = useCallback((): string[] => {
+    const keyStates: { [key: string]: 'correct' | 'present' | 'absent' | 'unused' } = {};
+    gameState.guesses.forEach(guess => {
+      const letterStates = getLetterStates(guess);
+      letterStates.forEach(({ letter, status }) => {
+        if (status === 'correct') {
+          keyStates[letter] = 'correct';
+        } else if (status === 'present' && keyStates[letter] !== 'correct') {
+          keyStates[letter] = 'present';
+        } else if (status === 'absent' && !keyStates[letter]) {
+          keyStates[letter] = 'absent';
+        }
+      });
+    });
+
+    const uniqueCorrectLetters = new Set(palavraCorreta.split('').filter(letter => keyStates[letter] === 'correct'));
+    const allUniqueLetters = new Set(palavraCorreta.split(''));
+    
+    const reveleable = [...allUniqueLetters].filter(letter => !uniqueCorrectLetters.has(letter));
+    return reveleable;
+  }, [gameState.guesses, getLetterStates, palavraCorreta]);
+
+  const getRevealablePosition = useCallback((): number | null => {
+    const correctlyGuessedIndices = new Set<number>();
+    gameState.guesses.forEach(guess => {
+      guess.split('').forEach((letter, index) => {
+        if (letter === palavraCorreta[index]) {
+          correctlyGuessedIndices.add(index);
+        }
+      });
+    });
+
+    const availableIndices = [];
+    for (let i = 0; i < wordLength; i++) {
+      if (!correctlyGuessedIndices.has(i)) {
+        availableIndices.push(i);
+      }
+    }
+
+    if (availableIndices.length === 0) {
+      return null;
+    }
+
+    const randomIndex = Math.floor(Math.random() * availableIndices.length);
+    return availableIndices[randomIndex];
+  }, [gameState.guesses, palavraCorreta, wordLength]);
+
+  const revealLetterInGrid = (letter: string, index: number) => {
+    if (gameState.gameStatus !== 'playing') return;
+    const newGuess = Array(wordLength).fill('');
+    newGuess[index] = letter.toUpperCase();
+    setGameState(prev => ({
+      ...prev,
+      currentGuess: newGuess,
+    }));
+    setSelectedIndex(Math.min(index + 1, wordLength - 1));
+  };
 
   // Adicionar letra na posição selecionada
   const addLetter = (letter: string) => {
@@ -172,6 +260,13 @@ export const useGame = (showNotification?: (msg: string) => void) => {
   const submitGuess = async () => {
     if (gameState.gameStatus !== 'playing') return;
     const guessString = gameState.currentGuess.join('');
+
+    if (gameState.guesses.includes(guessString)) {
+      notify('Você já tentou esta palavra!');
+      onGameEvent?.('duplicateGuess');
+      return;
+    }
+
     if (guessString.length !== wordLength || gameState.currentGuess.includes('')) {
       notify(`Palavra deve ter ${wordLength} letras!`);
       return;
@@ -179,6 +274,7 @@ export const useGame = (showNotification?: (msg: string) => void) => {
     const resultado = await api.verificarPalavra(guessString);
     if (!resultado.existe) {
       notify('Palavra não encontrada!');
+      onGameEvent?.('invalidWord');
       return;
     }
     const newGuesses = [...gameState.guesses, guessString];
@@ -195,16 +291,14 @@ export const useGame = (showNotification?: (msg: string) => void) => {
         notify(`🎉 Parabéns! Você completou em ${formatTime(finalTime)}!`);
       } else {
         notify('🎉 Parabéns! Você acertou!');
-        addGameResult('win', newGuesses.length);
       }
     } else if (isGameOver) {
       newStatus = 'lost';
       if (gameState.isSpeedRun) {
         setIsSpeedRunActive(false);
       } else {
-        addGameResult('loss', newGuesses.length);
+        notify(`😔 A palavra era: ${palavraCorreta}`);
       }
-      notify(`😔 A palavra era: ${palavraCorreta}`);
     }
 
     setGameState(prev => ({
@@ -242,6 +336,12 @@ export const useGame = (showNotification?: (msg: string) => void) => {
     palavraCorreta,
     getLetterStates,
     getKeyboardStates,
+    getReveleableLetters,
+    getRevealablePosition,
+    revealLetterInGrid,
+    checkGuessIsAllGray,
+    checkGuessHasPresentWithoutCorrect,
+    checkGuessHasPresentAndCorrect,
     addLetter,
     removeLetter,
     submitGuess,

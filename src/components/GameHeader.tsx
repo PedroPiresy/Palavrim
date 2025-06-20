@@ -1,5 +1,53 @@
 import React from 'react';
-import { HelpCircle, Clock, Dumbbell, Copy, Boxes, BarChartHorizontal } from 'lucide-react';
+import { HelpCircle, BarChartHorizontal, Home, Zap } from 'lucide-react';
+import { GameStats } from '../utils/stats';
+import { PlayerStatsDisplay } from './PlayerStatsDisplay';
+
+// Componente SVG para Abracadupla (2 grids lado a lado)
+const DuetoIcon: React.FC<{ size?: number }> = ({ size = 22 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    {/* Grid esquerdo */}
+    <rect x="2" y="4" width="8" height="16" rx="1" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+    <rect x="3" y="5" width="2" height="2" fill="currentColor" opacity="0.3"/>
+    <rect x="6" y="5" width="2" height="2" fill="currentColor" opacity="0.3"/>
+    <rect x="9" y="5" width="1" height="2" fill="currentColor" opacity="0.3"/>
+    
+    {/* Grid direito */}
+    <rect x="14" y="4" width="8" height="16" rx="1" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+    <rect x="15" y="5" width="2" height="2" fill="currentColor" opacity="0.3"/>
+    <rect x="18" y="5" width="2" height="2" fill="currentColor" opacity="0.3"/>
+    <rect x="21" y="5" width="1" height="2" fill="currentColor" opacity="0.3"/>
+  </svg>
+);
+
+// Componente SVG para Abracatetra (4 grids em 2x2)
+const TetraIcon: React.FC<{ size?: number }> = ({ size = 22 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    {/* Grid superior esquerdo */}
+    <rect x="2" y="2" width="8" height="8" rx="1" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+    <rect x="3" y="3" width="2" height="2" fill="currentColor" opacity="0.3"/>
+    <rect x="6" y="3" width="2" height="2" fill="currentColor" opacity="0.3"/>
+    <rect x="9" y="3" width="1" height="2" fill="currentColor" opacity="0.3"/>
+    
+    {/* Grid superior direito */}
+    <rect x="14" y="2" width="8" height="8" rx="1" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+    <rect x="15" y="3" width="2" height="2" fill="currentColor" opacity="0.3"/>
+    <rect x="18" y="3" width="2" height="2" fill="currentColor" opacity="0.3"/>
+    <rect x="21" y="3" width="1" height="2" fill="currentColor" opacity="0.3"/>
+    
+    {/* Grid inferior esquerdo */}
+    <rect x="2" y="14" width="8" height="8" rx="1" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+    <rect x="3" y="15" width="2" height="2" fill="currentColor" opacity="0.3"/>
+    <rect x="6" y="15" width="2" height="2" fill="currentColor" opacity="0.3"/>
+    <rect x="9" y="15" width="1" height="2" fill="currentColor" opacity="0.3"/>
+    
+    {/* Grid inferior direito */}
+    <rect x="14" y="14" width="8" height="8" rx="1" stroke="currentColor" strokeWidth="1.5" fill="none"/>
+    <rect x="15" y="15" width="2" height="2" fill="currentColor" opacity="0.3"/>
+    <rect x="18" y="15" width="2" height="2" fill="currentColor" opacity="0.3"/>
+    <rect x="21" y="15" width="1" height="2" fill="currentColor" opacity="0.3"/>
+  </svg>
+);
 
 interface GameHeaderProps {
   onShowHelp: () => void;
@@ -8,67 +56,67 @@ interface GameHeaderProps {
   onQuarteto: () => void;
   onHome: () => void;
   onSpeedRun: () => void;
+  stats: GameStats;
+  mode: string;
+  isVimMode: boolean;
 }
 
-export const GameHeader: React.FC<GameHeaderProps> = ({ onShowHelp, onShowStats, onDueto, onQuarteto, onHome, onSpeedRun }) => {
+const HeaderButton: React.FC<{ onClick: () => void; title: string; children: React.ReactNode }> = ({ onClick, title, children }) => (
+  <button
+    onClick={onClick}
+    title={title}
+    className="p-2 rounded-lg text-gray-300 hover:bg-[#3a3a3a] hover:text-white transition-all duration-200"
+  >
+    {children}
+  </button>
+);
+
+export function GameHeader({ onShowHelp, onShowStats, onDueto, onQuarteto, onHome, onSpeedRun, stats, mode, isVimMode }: GameHeaderProps) {
+  const modeText = isVimMode ? 'COMMAND' : mode.toUpperCase();
+  const vimStatus = isVimMode ? 'CMD' : 'RO';
+
   return (
-    <header className="w-full bg-[#1a1a1a] p-0 m-0 rounded-b-2xl">
-      <div className="w-full max-w-7xl mx-auto px-8 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="">
-            <img src="/assets/images/Palavrim.png" alt="Palavrim" className="w-10 h-10" />
-          </div>
-          <button
-            onClick={onHome}
-            className="text-2xl font-bold text-[#8b5cf6] font-mono bg-transparent border-none outline-none cursor-pointer hover:underline"
-            style={{ padding: 0, margin: 0 }}
-            title="Voltar ao modo normal"
-          >
-            Palavrim
-          </button>
-        </div>
-        
+    <header className="shadow-lg">
+      <div className="w-full bg-[#6d28d9] py-1.5 px-4 flex justify-between items-center font-mono text-xs text-purple-200">
+        <span>{`>_ palavrim [${vimStatus}]`}</span>
+        <span>-- {modeText} --</span>
+      </div>
+      
+      <div className="flex items-center justify-between py-3 px-6 bg-[#2d2d2d] rounded-b-xl">
         <div className="flex items-center gap-2">
-          <button
-            onClick={onSpeedRun}
-            className="py-2 px-4 rounded-lg bg-[#2d2d2d] text-[#d0d0d0] hover:text-[#8b5cf6] hover:bg-[#3d3d3d] border border-[#3d3d3d] hover:border-[#8b5cf6] transition-all duration-200 font-bold text-base flex items-center justify-center gap-2"
-            title="Speed Run Mode"
-          >
-            <Clock size={16} />
-            Speed Run
-          </button>
-          <button
-            onClick={onDueto}
-            className="py-2 px-4 rounded-lg bg-[#2d2d2d] text-[#d0d0d0] hover:text-[#8b5cf6] hover:bg-[#3d3d3d] border border-[#3d3d3d] hover:border-[#8b5cf6] transition-all duration-200 font-bold text-base flex items-center justify-center gap-2"
-            title="Modo Abracadupla"
-          >
-            <Copy size={16} />
-            Dueto
-          </button>
-          <button
-            onClick={onQuarteto}
-            className="py-2 px-4 rounded-lg bg-[#2d2d2d] text-[#d0d0d0] hover:text-[#8b5cf6] hover:bg-[#3d3d3d] border border-[#3d3d3d] hover:border-[#8b5cf6] transition-all duration-200 font-bold text-base flex items-center justify-center gap-2"
-            title="Modo Abracatetra"
-          >
-            <Boxes size={16} />
-            Quarteto
-          </button>
-          <button
-            onClick={onShowStats}
-            className="p-2.5 rounded-lg bg-[#2d2d2d] text-[#d0d0d0] hover:bg-[#3d3d3d] border border-[#3d3d3d] hover:border-[#8b5cf6] transition-all duration-200"
-            title="Estatísticas"
-          >
-            <BarChartHorizontal size={20} />
-          </button>
-          <button
-            onClick={onShowHelp}
-            className="p-2.5 rounded-lg bg-[#2d2d2d] text-[#d0d0d0] hover:bg-[#3d3d3d] border border-[#3d3d3d] hover:border-[#8b5cf6] transition-all duration-200"
-            title="Como jogar"
-          >
-            <HelpCircle size={20} />
-          </button>
+          <HeaderButton onClick={onShowHelp} title="Como jogar">
+            <HelpCircle size={24} />
+          </HeaderButton>
+          <HeaderButton onClick={onShowStats} title="Estatísticas">
+            <BarChartHorizontal size={24} />
+          </HeaderButton>
+        </div>
+
+        <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-3 cursor-pointer" onClick={onHome} title="Voltar ao modo normal">
+          <img src="/assets/images/Palavrim.png" alt="Palavrim" className="h-9 w-9" />
+          <h1 className="text-3xl font-bold font-mono tracking-widest bg-clip-text text-transparent bg-gradient-to-r from-[#8b5cf6] to-[#a855f7]">
+            Palavrim
+          </h1>
+        </div>
+
+        <div className="flex items-center gap-6">
+          <PlayerStatsDisplay stats={stats} />
+          <div className="flex items-center gap-2">
+            <HeaderButton onClick={onHome} title="Modo Normal">
+              <Home size={22} />
+            </HeaderButton>
+            <HeaderButton onClick={onDueto} title="Abracadupla">
+              <DuetoIcon size={22} />
+            </HeaderButton>
+            <HeaderButton onClick={onQuarteto} title="Abracatetra">
+              <TetraIcon size={22} />
+            </HeaderButton>
+            <HeaderButton onClick={onSpeedRun} title="Modo Mágico">
+              <Zap size={22} />
+            </HeaderButton>
+          </div>
         </div>
       </div>
     </header>
   );
-};
+}

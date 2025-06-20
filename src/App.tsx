@@ -2,17 +2,20 @@ import React, { useState, useEffect } from 'react';
 import { GameHeader } from './components/GameHeader';
 import { GameGrid } from './components/GameGrid';
 import { Keyboard } from './components/Keyboard';
+import { Spellbook } from './components/Spellbook';
 import { HelpModal } from './components/HelpModal';
 import { SpeedRunHelpModal } from './components/SpeedRunHelpModal';
 import { StatsModal } from './components/StatsModal';
 import { Notification } from './components/Notification';
-import { useGame } from './hooks/useGame';
+import { useGame, GameEvent } from './hooks/useGame';
 import { Loader2, Home, Play, BookOpen, BarChartHorizontal } from 'lucide-react';
 import { api } from './utils/api';
 import PalavrimLayout from './components/PalavrimLayout';
 import { Routes, Route, useNavigate } from 'react-router-dom';
 import NotFound from './NotFound';
-import { GameStats, loadStats, getInitialStats } from './utils/stats';
+import { GameStats, loadStats, saveStats, getInitialStats, updateStatsOnWin, updateStatsOnLoss } from './utils/stats';
+import { getMascotMessage, MessageType } from './utils/mascotMessages';
+import { Mascot } from './components/Mascot';
 
 function App() {
   const [notification, setNotification] = useState<string>('');
@@ -23,6 +26,19 @@ function App() {
     setTimeout(() => setNotification(''), 1600);
   };
 
+  const [mascotMessage, setMascotMessage] = useState<string>('');
+  const [mascotKey, setMascotKey] = useState(0);
+  const [isCastingSpell, setIsCastingSpell] = useState(false);
+  const [shouldExplode, setShouldExplode] = useState(false);
+  const [showVictoryModal, setShowVictoryModal] = useState(false);
+
+  const triggerMascotMessage = (type: MessageType, rank?: string) => {
+    setTimeout(() => {
+      setMascotMessage(getMascotMessage(type, rank));
+      setMascotKey(prev => prev + 1);
+    }, 500);
+  };
+
   const {
     gameState,
     wordLength,
@@ -30,6 +46,12 @@ function App() {
     palavraCorreta,
     getLetterStates,
     getKeyboardStates,
+    getReveleableLetters,
+    getRevealablePosition,
+    revealLetterInGrid,
+    checkGuessIsAllGray,
+    checkGuessHasPresentWithoutCorrect,
+    checkGuessHasPresentAndCorrect,
     addLetter,
     removeLetter,
     submitGuess,
@@ -41,13 +63,47 @@ function App() {
     isSpeedRunActive,
     speedRunTime,
     formatTime
-  } = useGame(showNotification);
+  } = useGame(showNotification, (event) => triggerMascotMessage(event as MessageType));
 
   const [showHelp, setShowHelp] = useState(true);
   const [showSpeedRunHelp, setShowSpeedRunHelp] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const [stats, setStats] = useState<GameStats>(getInitialStats());
   const [modo, setModo] = useState<'normal' | 'dueto' | 'abracatetra' | 'speedrun'>('normal');
+  const [revealSpellUses, setRevealSpellUses] = useState(0);
+
+  useEffect(() => {
+    const today = new Date().toISOString().split('T')[0];
+    const stats = loadStats();
+
+    if (stats.lastDailyBonus !== today) {
+      const manaToAdd = 15;
+      const newMana = Math.min(stats.mana + manaToAdd, 100);
+      const updatedStats = {
+        ...stats,
+        mana: newMana,
+        lastDailyBonus: today,
+      };
+      setStats(updatedStats);
+      saveStats(updatedStats);
+      showNotification(`✨ +${manaToAdd} de Mana por seu retorno!`);
+    } else {
+      setStats(stats);
+    }
+
+    triggerMascotMessage('welcome');
+  }, []);
+
+  // Reset logic for new games
+  useEffect(() => {
+    if (gameState.gameStatus === 'playing' && gameState.guesses.length === 0) {
+      setRevealSpellUses(0);
+      setIsCastingSpell(false);
+      setShouldExplode(false);
+      setShowVictoryModal(false);
+      triggerMascotMessage('welcome');
+    }
+  }, [gameState.gameStatus, gameState.guesses.length]);
 
   // Estado para Dueto
   const [dueto, setDueto] = useState({
@@ -320,12 +376,14 @@ function App() {
     if (e.key === 'Enter') {
       e.preventDefault();
       e.stopPropagation();
-      if (comando.trim() === 'q!') {
+      const command = comando.trim();
+
+      if (command === 'q!') {
         sairModoComando();
         if (modo === 'dueto') restartDueto();
         else if (modo === 'abracatetra') restartTetra();
         else restartGame();
-      } else if (comando.trim() === 'admin') {
+      } else if (command === 'admin') {
         sairModoComando();
         if (modo === 'dueto') {
           showNotification(`Respostas: ${dueto.word1}, ${dueto.word2}`);
@@ -334,6 +392,14 @@ function App() {
         } else {
           showNotification(`Resposta: ${palavraCorreta}`);
         }
+      } else if (command === 'magiaadmin') {
+        sairModoComando();
+        setStats(prevStats => {
+            const newStats = { ...prevStats, mana: 100 };
+            saveStats(newStats);
+            return newStats;
+        });
+        showNotification('🔮 Mana restaurada para o máximo!');
       }
     } else if (e.key === 'Escape') {
       sairModoComando();
@@ -392,8 +458,103 @@ function App() {
   };
 
   useEffect(() => {
-    setStats(loadStats());
-  }, []);
+    if (gameState.gameStatus === 'won') {
+      const guessCount = gameState.guesses.length;
+      
+      // Verifica se foi na última tentativa
+      const wasLastAttempt = guessCount === gameState.maxAttempts;
+      
+      if (wasLastAttempt) {
+        // Ativa a sequência de animações épicas
+        setIsCastingSpell(true);
+        setTimeout(() => {
+          setShouldExplode(true);
+          setIsCastingSpell(false);
+          // Mostra o modal após a animação terminar
+          setTimeout(() => {
+            setShowVictoryModal(true);
+          }, 800); // Tempo para a explosão terminar
+        }, 1000); // Tempo para o feitiço voar
+      } else {
+        // Para vitórias normais, mostra o modal imediatamente
+        setShowVictoryModal(true);
+      }
+      
+      if (guessCount <= 2) {
+        triggerMascotMessage('flawlessWin');
+      } else if (guessCount === gameState.maxAttempts) {
+        triggerMascotMessage('clutchWin');
+      } else {
+        triggerMascotMessage('win');
+      }
+
+      setStats(prevStats => {
+        const { newStats, leveledUp, xpGained } = updateStatsOnWin(prevStats, guessCount);
+        showNotification(`+${xpGained} XP!`);
+        if (leveledUp) {
+            setTimeout(() => {
+                showNotification(`🎉 Nível ${newStats.level}! ${newStats.rank}! +50 de Mana!`);
+                triggerMascotMessage('levelUp', newStats.rank);
+            }, 1800);
+        }
+        saveStats(newStats);
+        return newStats;
+      });
+    } else if (gameState.gameStatus === 'lost') {
+      triggerMascotMessage('loss');
+      setStats(prevStats => {
+        const newStats = updateStatsOnLoss(prevStats);
+        saveStats(newStats);
+        return newStats;
+      });
+    }
+    if (gameState.gameStatus !== 'playing') {
+      setMascotKey(prev => prev + 1);
+    }
+  }, [gameState.gameStatus]);
+
+  useEffect(() => {
+    if (gameState.gameStatus !== 'playing' || gameState.guesses.length === 0) return;
+
+    const lastGuess = gameState.guesses[gameState.guesses.length - 1];
+
+    if (gameState.guesses.length === 1 && checkGuessIsAllGray(lastGuess)) {
+      triggerMascotMessage('firstGuessFlop');
+    } else if (checkGuessHasPresentAndCorrect(lastGuess)) {
+      triggerMascotMessage('makingProgress');
+    } else if (checkGuessHasPresentWithoutCorrect(lastGuess)) {
+      triggerMascotMessage('foundPresent');
+    }
+
+    // Last attempt warning
+    if (gameState.guesses.length === gameState.maxAttempts - 1) {
+      triggerMascotMessage('lastAttempt');
+    }
+  }, [gameState.guesses]);
+
+  const castRevealLetterSpell = () => {
+    const cost = 25;
+    if (stats.mana < cost || revealSpellUses >= 2 || gameState.gameStatus !== 'playing') {
+      showNotification('Não é possível lançar o feitiço agora.');
+      return;
+    }
+
+    const position = getRevealablePosition();
+    if (position === null) {
+      showNotification('Todas as letras possíveis já foram reveladas ou adivinhadas!');
+      return;
+    }
+
+    triggerMascotMessage('usedSpell');
+    setRevealSpellUses(prev => prev + 1);
+    const newStats = { ...stats, mana: stats.mana - cost };
+    saveStats(newStats);
+    setStats(newStats);
+
+    const letterToReveal = palavraCorreta[position];
+    revealLetterInGrid(letterToReveal, position);
+    showNotification(`🔮 Feitiço lançado! Uma letra foi revelada no grid.`);
+  };
 
   if (loading || dueto.loading || tetra.loading) {
     return (
@@ -413,19 +574,20 @@ function App() {
       <Route path="/notfound" element={<NotFound />} />
       <Route path="/*" element={
         <PalavrimLayout>
-          <div className="w-full max-w-full m-0 p-0">
-            <GameHeader
-              onShowHelp={() => setShowHelp(true)}
-              onShowStats={() => {
-                setStats(loadStats());
-                setShowStats(true);
-              }}
-              onDueto={iniciarDueto}
-              onQuarteto={iniciarTetra}
-              onHome={voltarParaNormal}
-              onSpeedRun={iniciarSpeedRun}
-            />
-          </div>
+          <GameHeader
+            onShowHelp={() => setShowHelp(true)}
+            onShowStats={() => {
+              setStats(loadStats());
+              setShowStats(true);
+            }}
+            onDueto={iniciarDueto}
+            onQuarteto={iniciarTetra}
+            onHome={voltarParaNormal}
+            onSpeedRun={iniciarSpeedRun}
+            stats={stats}
+            mode={modo}
+            isVimMode={modoComando}
+          />
           <main className="flex-1 flex flex-col items-center justify-center gap-4 max-w-7xl mx-auto w-full">
             {notification && (
               <div className="w-full flex justify-center mb-4">
@@ -492,9 +654,19 @@ function App() {
                 isSpeedRun={modo === 'speedrun'}
                 isSpeedRunActive={isSpeedRunActive}
                 onTimeUpdate={updateSpeedRunTime}
+                isLastAttempt={gameState.guesses.length === gameState.maxAttempts - 1 && gameState.gameStatus === 'playing'}
+                shouldExplode={shouldExplode}
               />
               )}
             </div>
+            {modo === 'normal' && gameState.gameStatus === 'playing' && (
+              <Spellbook 
+                onCastRevealLetter={castRevealLetterSpell}
+                canCastRevealLetter={getRevealablePosition() !== null}
+                mana={stats.mana}
+                spellUses={revealSpellUses}
+              />
+            )}
             <Keyboard
               keyboardStates={modo === 'dueto' ? getKeyboardStatesDueto() : modo === 'abracatetra' ? getKeyboardStatesTetra() : getKeyboardStates()}
               onKeyPress={modo === 'dueto' ? addLetterDueto : modo === 'abracatetra' ? addLetterTetra : addLetterNormal}
@@ -561,7 +733,7 @@ function App() {
                 </div>
               </div>
             )}
-            {(modo === 'normal' || modo === 'speedrun') && gameState.gameStatus !== 'playing' && (
+            {(modo === 'normal' || modo === 'speedrun') && gameState.gameStatus !== 'playing' && showVictoryModal && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
                 <div className="p-6 bg-[#2d2d2d] rounded-lg border border-[#3d3d3d] shadow-xl min-w-[320px] max-w-full flex flex-col items-center">
                   <div className="space-y-2 text-center">
@@ -660,15 +832,14 @@ function App() {
                   <span className="text-[#8b5cf6] font-mono text-xl mr-2">:</span>
                   <input
                     ref={inputRef}
-                    className="bg-transparent border-none outline-none text-[#d0d0d0] font-mono text-xl w-32"
+                    className="bg-transparent border-none outline-none text-[#d0d0d0] font-mono text-xl w-48"
                     value={comando}
                     onChange={e => setComando(e.target.value)}
                     onKeyDown={processarComando}
                     autoFocus
                     spellCheck={false}
-                    placeholder="q!"
                   />
-                  <span className="ml-4 text-[#8b5cf6] font-mono text-xs">Digite <b>q!</b> e Enter para reiniciar, <b>Esc</b> para cancelar.</span>
+                  <span className="ml-4 text-[#8b5cf6] font-mono text-xs"><b>q!</b> (reiniciar), <b>admin</b> (resposta), <b>magiaadmin</b> (mana), <b>Esc</b> (cancelar)</span>
                 </div>
               </>
             )}
@@ -710,6 +881,7 @@ function App() {
               onClose={() => setShowStats(false)}
               stats={stats}
             />
+            {mascotMessage && <Mascot key={mascotKey} message={mascotMessage} isCastingSpell={isCastingSpell} />}
           </main>
           <HelpModal
             isOpen={showHelp}

@@ -1,6 +1,6 @@
 import React from 'react';
-import { X, BarChartHorizontal, Trophy, Repeat, Medal, Skull } from 'lucide-react';
-import { GameStats } from '../utils/stats';
+import { X, BarChartHorizontal, Trophy, Repeat, Medal, Skull, Star, Zap } from 'lucide-react';
+import { GameStats, getXpForNextLevel } from '../utils/stats';
 
 interface StatsModalProps {
   isOpen: boolean;
@@ -28,12 +28,13 @@ const DistributionBar: React.FC<{ label: React.ReactNode; count: number; maxValu
   );
 };
 
-
 export const StatsModal: React.FC<StatsModalProps> = ({ isOpen, onClose, stats }) => {
   if (!isOpen) return null;
 
-  const winPercentage = stats.gamesPlayed > 0 ? Math.round((stats.wins / stats.gamesPlayed) * 100) : 0;
-  const maxDistributionValue = Math.max(...Object.values(stats.guessDistribution), stats.failures, 1);
+  const winPercentage = stats.gamesPlayed > 0 ? Math.round((stats.gamesWon / stats.gamesPlayed) * 100) : 0;
+  const maxDistributionValue = Math.max(...Object.values(stats.guesses), 1);
+  const xpForNextLevel = getXpForNextLevel(stats.level);
+  const xpProgressPercentage = Math.min(100, Math.floor((stats.xp / xpForNextLevel) * 100));
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -52,20 +53,48 @@ export const StatsModal: React.FC<StatsModalProps> = ({ isOpen, onClose, stats }
         </div>
         
         <div className="p-6 space-y-6">
+          {/* Rank e Nível */}
+          <div className="bg-[#2d2d2d] rounded-lg p-4 border border-[#3d3d3d]">
+            <div className="flex items-center gap-2 mb-3">
+              <Star size={20} className="text-[#facc15]" />
+              <h3 className="text-lg font-bold text-white">{stats.rank}</h3>
+            </div>
+            <div className="space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-400">Nível {stats.level}</span>
+                <span className="text-white">{stats.xp} / {xpForNextLevel} XP</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-full bg-[#3a3a3a] rounded-full h-2">
+                  <div 
+                    className="bg-gradient-to-r from-[#8b5cf6] to-[#a855f7] h-2 rounded-full transition-all duration-500" 
+                    style={{ width: `${xpProgressPercentage}%` }}
+                  />
+                </div>
+                <span className="text-sm font-bold text-purple-300">{stats.level + 1}</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 mt-3">
+              <Zap size={16} className="text-[#fbbf24]" />
+              <span className="text-sm text-gray-400">Mana: {stats.mana}</span>
+            </div>
+          </div>
+
+          {/* Estatísticas Gerais */}
           <div className="grid grid-cols-4 gap-4 text-center">
             <StatItem value={stats.gamesPlayed} label="jogos" />
             <StatItem value={`${winPercentage}%`} label="de vitórias" />
-            <StatItem value={stats.currentStreak} label="sequência de vitórias" />
-            <StatItem value={stats.maxStreak} label="melhor sequência" />
+            <StatItem value={stats.winStreak} label="sequência atual" />
+            <StatItem value={stats.maxWinStreak} label="melhor sequência" />
           </div>
 
+          {/* Distribuição de Tentativas */}
           <div className="space-y-4">
             <h3 className="text-lg font-bold text-center text-white">Distribuição de Tentativas</h3>
             <div className="space-y-2">
-              {Object.entries(stats.guessDistribution).map(([guess, count]) => (
+              {Object.entries(stats.guesses).map(([guess, count]) => (
                 <DistributionBar key={guess} label={parseInt(guess)} count={count} maxValue={maxDistributionValue} />
               ))}
-              <DistributionBar label={<Skull size={16} />} count={stats.failures} maxValue={maxDistributionValue} />
             </div>
           </div>
         </div>

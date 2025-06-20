@@ -14,6 +14,8 @@ interface GameGridProps {
   isSpeedRun?: boolean;
   isSpeedRunActive?: boolean;
   onTimeUpdate?: (time: number) => void;
+  isLastAttempt?: boolean;
+  shouldExplode?: boolean;
 }
 
 export const GameGrid: React.FC<GameGridProps> = ({
@@ -27,7 +29,9 @@ export const GameGrid: React.FC<GameGridProps> = ({
   selectIndex,
   isSpeedRun = false,
   isSpeedRunActive = false,
-  onTimeUpdate
+  onTimeUpdate,
+  isLastAttempt = false,
+  shouldExplode = false,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -133,7 +137,36 @@ export const GameGrid: React.FC<GameGridProps> = ({
           const isCurrentRow = rowIndex === guesses.length;
           
           return (
-            <div key={rowIndex} className="flex gap-2 justify-center">
+            <div key={rowIndex} className="flex gap-2 justify-center items-center">
+              {/* Mostra a caveira na última tentativa */}
+              {isLastAttempt && isCurrentRow && (
+                <div className="w-8 h-14 flex items-center justify-center">
+                  {shouldExplode ? (
+                    <div className="relative">
+                      {/* Explosão da caveira */}
+                      <div className="absolute inset-0 animate-explode">
+                        <div className="w-8 h-8 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full animate-explosion-core"></div>
+                      </div>
+                      {/* Partículas da explosão */}
+                      {Array.from({ length: 8 }).map((_, i) => (
+                        <div
+                          key={i}
+                          className="absolute w-2 h-2 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full animate-explosion-particle"
+                          style={{
+                            '--particle-angle': `${i * 45}deg`,
+                            '--particle-delay': `${i * 0.1}s`
+                          } as React.CSSProperties}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="animate-pulse">
+                      <span className="text-3xl text-red-500">💀</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {rowData.map((cell, cellIndex) => {
                 const isSelected = isCurrentRow && cellIndex === selectedIndex;
                 return (
@@ -156,6 +189,11 @@ export const GameGrid: React.FC<GameGridProps> = ({
                   </div>
                 );
               })}
+
+              {/* Espaço para a caveira do outro lado para manter o grid centrado */}
+              {isLastAttempt && isCurrentRow && (
+                <div className="w-8"></div>
+              )}
             </div>
           );
         })}
@@ -163,3 +201,50 @@ export const GameGrid: React.FC<GameGridProps> = ({
     </div>
   );
 };
+
+// CSS for animations
+const styles = `
+@keyframes explode {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.5); opacity: 0.8; }
+  100% { transform: scale(2); opacity: 0; }
+}
+
+@keyframes explosion-core {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.5); }
+  100% { transform: scale(0); }
+}
+
+@keyframes explosion-particle {
+  0% { 
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+  100% { 
+    transform: translate(
+      calc(cos(var(--particle-angle)) * 50px),
+      calc(sin(var(--particle-angle)) * 50px)
+    ) scale(0);
+    opacity: 0;
+  }
+}
+
+.animate-explode {
+  animation: explode 0.8s ease-out forwards;
+}
+
+.animate-explosion-core {
+  animation: explosion-core 0.8s ease-out forwards;
+}
+
+.animate-explosion-particle {
+  animation: explosion-particle 0.8s ease-out forwards;
+  animation-delay: var(--particle-delay);
+}
+`;
+
+const styleSheet = document.createElement("style");
+styleSheet.type = "text/css";
+styleSheet.innerText = styles;
+document.head.appendChild(styleSheet);
