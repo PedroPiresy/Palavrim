@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { LetterState } from '../types/game';
 
 interface GameGridProps {
@@ -23,6 +23,26 @@ export const GameGrid: React.FC<GameGridProps> = ({
   selectIndex
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Efeito para manter o foco no grid
+  useEffect(() => {
+    const gridElement = containerRef.current;
+    if (gridElement) {
+      gridElement.focus();
+      
+      // Refocar o grid quando clicar em qualquer lugar da página
+      const handleClick = () => {
+        if (document.activeElement !== gridElement) {
+          gridElement.focus();
+        }
+      };
+      
+      document.addEventListener('click', handleClick);
+      return () => {
+        document.removeEventListener('click', handleClick);
+      };
+    }
+  }, []);
 
   const getRowData = (rowIndex: number) => {
     if (rowIndex < guesses.length) {
@@ -67,11 +87,15 @@ export const GameGrid: React.FC<GameGridProps> = ({
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (isCompleted) return;
     if (document.activeElement !== e.currentTarget) return;
+    
     if (e.key === 'ArrowLeft') {
       selectIndex(Math.max(selectedIndex - 1, 0));
       e.preventDefault();
     } else if (e.key === 'ArrowRight') {
       selectIndex(Math.min(selectedIndex + 1, wordLength - 1));
+      e.preventDefault();
+    } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+      // Mantém o foco no grid quando usar as setas
       e.preventDefault();
     }
   };
@@ -79,9 +103,11 @@ export const GameGrid: React.FC<GameGridProps> = ({
   return (
     <div
       ref={containerRef}
-      className={`grid-componente flex flex-col gap-2 p-6 ${isCompleted ? 'grid-completed' : ''}`}
+      className={`grid-componente flex flex-col gap-2 p-6 ${isCompleted ? 'grid-completed' : ''} outline-none focus:ring-2 focus:ring-purple-500 rounded-lg`}
       tabIndex={0}
       onKeyDown={handleKeyDown}
+      aria-label="Grade do jogo"
+      role="grid"
     >
       {Array(maxAttempts).fill(0).map((_, rowIndex) => {
         const rowData = getRowData(rowIndex);
@@ -103,6 +129,9 @@ export const GameGrid: React.FC<GameGridProps> = ({
                     containerRef.current?.focus();
                   } : undefined}
                   tabIndex={isCurrentRow ? 0 : -1}
+                  role="gridcell"
+                  aria-selected={isSelected}
+                  aria-label={`Célula ${cellIndex + 1} da linha ${rowIndex + 1}${cell.letter ? `: ${cell.letter}` : ''}`}
                 >
                   {cell.letter}
                 </div>
