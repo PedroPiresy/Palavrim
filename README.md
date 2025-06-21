@@ -15,14 +15,14 @@ Palavrim é uma releitura moderna do clássico jogo de adivinhar palavras, inspi
 ## 📸 Visão Geral
 
 <p align="center">
-  <img src="public/assets/images/palavrim-desktop.png" alt="Screenshot do Palavrim no Desktop" width="70%">
+   <img src="https://github.com/user-attachments/assets/65ca7050-1a38-4f99-b19c-8e62bf31d355" alt="Screenshot do Palavrim no Desktop" width="90%">
   <br>
   <em>Versão para Desktop</em>
 </p>
 
 <p align="center">
-  <img src="public/assets/images/palavrim-mobile.png" alt="Screenshot do Palavrim no Mobile" width="35%">
-  <br>
+  <img src="https://github.com/user-attachments/assets/00057919-b6f2-472b-a3aa-d651062e489f" alt="Screenshot do Palavrim no Mobile" width="35%">
+ <br>
   <em>Versão para Mobile</em>
 </p>
 
