@@ -33,7 +33,6 @@ export const api = {
       if (!response.ok) throw new Error('Erro ao buscar palavra aleatória');
       const palavra = await response.json();
       palavraAtual = palavra.toUpperCase();
-      console.log(palavraAtual);
       return palavraAtual;
     } catch (error) {
       console.error('Erro na API getPalavraAleatoria:', error);
