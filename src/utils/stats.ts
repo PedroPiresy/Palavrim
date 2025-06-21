@@ -1,62 +1,68 @@
+// Interface para dados semanais do jogador
 export interface WeeklyData {
-  weekStartDate: string;
-  gamesPlayed: number;
-  gamesWon: number;
-  totalAttemptsOnWin: number;
+  weekStartDate: string;        // Data de início da semana (YYYY-MM-DD)
+  gamesPlayed: number;          // Jogos jogados na semana
+  gamesWon: number;             // Jogos ganhos na semana
+  totalAttemptsOnWin: number;   // Total de tentativas nos jogos ganhos
 }
 
+// Interface principal com todas as estatísticas do jogador
 export interface GameStats {
-  gamesPlayed: number;
-  gamesWon: number;
-  winStreak: number;
-  maxWinStreak: number;
-  guesses: { [key: number]: number };
-  totalAttemptsOnWin: number;
-  letterFrequency: { [key: string]: number };
-  weeklyEvolution: WeeklyData[];
-  lastPlayed: string;
-  lastWon: string;
-  lastDailyBonus: string;
-  xp: number;
-  level: number;
-  rank: string;
-  mana: number;
+  gamesPlayed: number;          // Total de jogos jogados
+  gamesWon: number;             // Total de jogos ganhos
+  winStreak: number;            // Sequência atual de vitórias
+  maxWinStreak: number;         // Maior sequência de vitórias já alcançada
+  guesses: { [key: number]: number };  // Contador de tentativas (1-6 tentativas)
+  totalAttemptsOnWin: number;   // Total de tentativas em jogos ganhos
+  letterFrequency: { [key: string]: number };  // Frequência de uso de cada letra
+  weeklyEvolution: WeeklyData[]; // Evolução semanal dos últimos 12 meses
+  lastPlayed: string;           // Última data jogada
+  lastWon: string;              // Última data que ganhou
+  lastDailyBonus: string;       // Última data que recebeu bônus diário
+  xp: number;                   // Pontos de experiência atuais
+  level: number;                // Nível atual do jogador
+  rank: string;                 // Título/rank atual (ex: "Aprendiz de Letras")
+  mana: number;                 // Mana atual (para modos especiais)
 }
 
+// Lista de todos os ranks/títulos possíveis no jogo
 export const ranks = [
-  "Aprendiz de Letras", // Nível 1-4
-  "Iniciado das Sílabas", // Nível 5-9
-  "Mago das Palavras", // Nível 10-14
-  "Feiticeiro Ortográfico", // Nível 15-19
-  "Arquimago do Dicionário", // Nível 20-24
-  "Lorde do Léxico", // Nível 25-29
-  "Semideus da Semântica", // Nível 30-39
-  "Avatar do Alfabeto", // Nível 40+
+  "Aprendiz de Letras",         // Nível 1-4
+  "Iniciado das Sílabas",       // Nível 5-9
+  "Mago das Palavras",          // Nível 10-14
+  "Feiticeiro Ortográfico",     // Nível 15-19
+  "Arquimago do Dicionário",    // Nível 20-24
+  "Lorde do Léxico",            // Nível 25-29
+  "Semideus da Semântica",      // Nível 30-39
+  "Avatar do Alfabeto",         // Nível 40+
 ];
 
-// Helper to get rank based on level
+// Função que determina qual rank o jogador tem baseado no nível
 export const getRankForLevel = (level: number): string => {
-  if (level >= 40) return ranks[7];
-  if (level >= 30) return ranks[6];
-  if (level >= 25) return ranks[5];
-  if (level >= 20) return ranks[4];
-  if (level >= 15) return ranks[3];
-  if (level >= 10) return ranks[2];
-  if (level >= 5) return ranks[1];
-  return ranks[0];
+  if (level >= 40) return ranks[7];  // Avatar do Alfabeto
+  if (level >= 30) return ranks[6];  // Semideus da Semântica
+  if (level >= 25) return ranks[5];  // Lorde do Léxico
+  if (level >= 20) return ranks[4];  // Arquimago do Dicionário
+  if (level >= 15) return ranks[3];  // Feiticeiro Ortográfico
+  if (level >= 10) return ranks[2];  // Mago das Palavras
+  if (level >= 5) return ranks[1];   // Iniciado das Sílabas
+  return ranks[0];                   // Aprendiz de Letras
 };
 
+// Calcula quantos XP são necessários para o próximo nível
+// A fórmula usa uma progressão exponencial: 250 * nível^1.5
 export const getXpForNextLevel = (level: number): number => {
   return Math.floor(250 * Math.pow(level, 1.5));
 };
 
+// Cria estatísticas iniciais para um novo jogador
 export const getInitialStats = (): GameStats => {
   return {
     gamesPlayed: 0,
     gamesWon: 0,
     winStreak: 0,
     maxWinStreak: 0,
-    guesses: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 },
+    guesses: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 }, // Inicializa contadores de tentativas
     totalAttemptsOnWin: 0,
     letterFrequency: {},
     weeklyEvolution: [],
@@ -65,11 +71,12 @@ export const getInitialStats = (): GameStats => {
     lastDailyBonus: '',
     xp: 0,
     level: 1,
-    rank: getRankForLevel(1),
-    mana: 100, // Starting mana
+    rank: getRankForLevel(1), // Começa como "Aprendiz de Letras"
+    mana: 100, // Mana inicial
   };
 };
 
+// Carrega estatísticas salvas do localStorage
 export const loadStats = (): GameStats => {
   const initialStats = getInitialStats();
   const statsJson = localStorage.getItem('gameStats');
@@ -81,34 +88,44 @@ export const loadStats = (): GameStats => {
   return initialStats;
 };
 
+// Salva estatísticas no localStorage
 export const saveStats = (stats: GameStats) => {
   localStorage.setItem('gameStats', JSON.stringify(stats));
 };
 
+// Calcula XP ganho baseado no número de tentativas
+// Quanto menos tentativas, mais XP ganha
 export const calculateXpGained = (guesses: number): number => {
-  const base_xp = 150;
-  const penalty = (guesses - 1) * 20;
-  return Math.max(20, base_xp - penalty);
+  const base_xp = 150;           // XP base por vitória
+  const penalty = (guesses - 1) * 20; // Penalidade de 20 XP por tentativa extra
+  return Math.max(20, base_xp - penalty); // Mínimo de 20 XP
 };
 
+// Atualiza estatísticas quando o jogador ganha
 export const updateStatsOnWin = (stats: GameStats, guessCount: number): { newStats: GameStats; leveledUp: boolean, xpGained: number } => {
   const newStats = { ...stats };
   
-  // Update standard stats
+  // Atualiza estatísticas básicas
   newStats.gamesPlayed++;
   newStats.gamesWon++;
   newStats.winStreak++;
   newStats.totalAttemptsOnWin += guessCount;
+  
+  // Atualiza maior sequência de vitórias se necessário
   if (newStats.winStreak > newStats.maxWinStreak) {
     newStats.maxWinStreak = newStats.winStreak;
   }
+  
+  // Incrementa contador de tentativas
   if (guessCount <= 6) {
     newStats.guesses[guessCount as keyof typeof newStats.guesses]++;
   }
+  
+  // Atualiza datas
   newStats.lastPlayed = new Date().toISOString().split('T')[0];
   newStats.lastWon = new Date().toISOString().split('T')[0];
   
-  // Atualiza a semana atual
+  // Atualiza estatísticas semanais
   const currentWeek = newStats.weeklyEvolution.find(w => w.weekStartDate === updateWeeklyEvolution(newStats).weeklyEvolution.slice(-1)[0].weekStartDate);
   if (currentWeek) {
     currentWeek.gamesPlayed++;
@@ -116,24 +133,27 @@ export const updateStatsOnWin = (stats: GameStats, guessCount: number): { newSta
     currentWeek.totalAttemptsOnWin += guessCount;
   }
 
-  // Add XP
+  // Adiciona XP
   const xpGained = calculateXpGained(guessCount);
   newStats.xp += xpGained;
   
-  // Check for level up
+  // Verifica se subiu de nível
   const oldLevel = newStats.level;
   let xpForNext = getXpForNextLevel(newStats.level);
+  
+  // Loop para subir múltiplos níveis se necessário
   while (newStats.xp >= xpForNext) {
     newStats.level++;
     newStats.xp -= xpForNext;
     xpForNext = getXpForNextLevel(newStats.level);
   }
   
+  // Atualiza rank baseado no novo nível
   newStats.rank = getRankForLevel(newStats.level);
   
   const leveledUp = newStats.level > oldLevel;
   
-  // Add 50 mana on level up, capped at 100
+  // Adiciona 50 mana ao subir de nível (máximo 100)
   if (leveledUp) {
     newStats.mana = Math.min(newStats.mana + 50, 100);
   }
@@ -141,13 +161,14 @@ export const updateStatsOnWin = (stats: GameStats, guessCount: number): { newSta
   return { newStats, leveledUp, xpGained };
 };
 
+// Atualiza estatísticas quando o jogador perde
 export const updateStatsOnLoss = (stats: GameStats): GameStats => {
   const newStats = { ...stats };
   newStats.gamesPlayed++;
-  newStats.winStreak = 0;
+  newStats.winStreak = 0; // Reseta sequência de vitórias
   newStats.lastPlayed = new Date().toISOString().split('T')[0];
 
-  // Atualiza a semana atual
+  // Atualiza estatísticas semanais
   const currentWeek = newStats.weeklyEvolution.find(w => w.weekStartDate === updateWeeklyEvolution(newStats).weeklyEvolution.slice(-1)[0].weekStartDate);
   if (currentWeek) {
     currentWeek.gamesPlayed++;
@@ -156,34 +177,38 @@ export const updateStatsOnLoss = (stats: GameStats): GameStats => {
   return newStats;
 };
 
-// Nova função para atualizar a frequência de letras
+// Atualiza a frequência de uso de cada letra
 export const updateLetterFrequency = (stats: GameStats, guess: string): GameStats => {
   const newStats = { ...stats };
   if (!newStats.letterFrequency) {
     newStats.letterFrequency = {}; // Garante que o objeto exista
   }
 
+  // Conta cada letra da tentativa
   for (const letter of guess.toUpperCase()) {
     newStats.letterFrequency[letter] = (newStats.letterFrequency[letter] || 0) + 1;
   }
   return newStats;
 };
 
-// Nova função para gerenciar a evolução semanal
+// Gerencia a evolução semanal das estatísticas
 export const updateWeeklyEvolution = (stats: GameStats): GameStats => {
   const newStats = { ...stats };
   if (!newStats.weeklyEvolution) {
     newStats.weeklyEvolution = [];
   }
 
+  // Calcula a data de início da semana atual (segunda-feira)
   const today = new Date();
   const weekDay = today.getDay(); // 0 = Domingo, 1 = Segunda, ...
   const mostRecentMonday = new Date(today);
   mostRecentMonday.setDate(today.getDate() - (weekDay === 0 ? 6 : weekDay - 1));
   const weekStartDate = mostRecentMonday.toISOString().split('T')[0];
 
+  // Procura se já existe dados para esta semana
   let currentWeekData = newStats.weeklyEvolution.find(w => w.weekStartDate === weekStartDate);
 
+  // Se não existe, cria uma nova entrada para a semana
   if (!currentWeekData) {
     currentWeekData = {
       weekStartDate,
@@ -193,7 +218,7 @@ export const updateWeeklyEvolution = (stats: GameStats): GameStats => {
     };
     newStats.weeklyEvolution.push(currentWeekData);
     
-    // Mantém apenas as últimas 12 semanas
+    // Mantém apenas as últimas 12 semanas (3 meses)
     if (newStats.weeklyEvolution.length > 12) {
       newStats.weeklyEvolution.shift();
     }
