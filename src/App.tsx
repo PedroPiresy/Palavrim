@@ -163,13 +163,6 @@ function App() {
 
   const navigate = useNavigate();
 
-  // Redireciona para 404 se for mobile
-  useEffect(() => {
-    if (window.innerWidth <= 768) {
-      navigate('/notfound');
-    }
-  }, [navigate]);
-
   // Iniciar modo Speed Run
   const iniciarSpeedRun = () => {
     setShowSpeedRunHelp(true);
@@ -926,12 +919,20 @@ function App() {
               stats={stats}
             />
             <AboutModal isOpen={showAbout} onClose={() => setShowAbout(false)} />
-            {mascotMessage && <Mascot key={mascotKey} message={mascotMessage} isCastingSpell={isCastingSpell} />}
+            <div className="hidden sm:block">
+              {mascotMessage && <Mascot key={mascotKey} message={mascotMessage} isCastingSpell={isCastingSpell} />}
+            </div>
           </main>
           <HelpModal
             isOpen={showHelp}
             onClose={() => setShowHelp(false)}
-            startTour={() => setTourOpen(true)}
+            startTour={() => {
+              if (window.innerWidth > 768) {
+                setTourOpen(true);
+              } else {
+                showNotification("O tour não está disponível em dispositivos móveis.");
+              }
+            }}
           />
         </PalavrimLayout>
       } />

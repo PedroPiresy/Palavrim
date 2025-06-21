@@ -13,7 +13,7 @@ interface StatsModalProps {
 
 const StatItem: React.FC<{ value: number | string; label: string }> = ({ value, label }) => (
   <div className="flex flex-col items-center">
-    <span className="text-3xl font-bold text-white">{value}</span>
+    <span className="text-2xl sm:text-3xl font-bold text-white">{value}</span>
     <span className="text-xs text-gray-400 text-center">{label}</span>
   </div>
 );
@@ -22,7 +22,7 @@ const StatItem: React.FC<{ value: number | string; label: string }> = ({ value, 
 const TabButton: React.FC<{ active: boolean; onClick: () => void; children: React.ReactNode }> = ({ active, onClick, children }) => (
   <button
     onClick={onClick}
-    className={`px-4 py-2 text-sm font-bold rounded-lg transition-colors duration-200 flex items-center gap-2 ${
+    className={`px-3 sm:px-4 py-2 text-xs sm:text-sm font-bold rounded-lg transition-colors duration-200 flex items-center gap-2 ${
       active
         ? 'bg-purple-600 text-white'
         : 'text-gray-400 hover:bg-[#3a3a3a] hover:text-white'
@@ -196,7 +196,7 @@ export const StatsModal: React.FC<StatsModalProps> = ({ isOpen, onClose, stats }
                 <span className="text-sm text-gray-400">Mana: {stats.mana}</span>
               </div>
             </div>
-            <div className="grid grid-cols-4 gap-4 text-center">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 text-center">
               <StatItem value={stats.gamesPlayed} label="jogos" />
               <StatItem value={`${winPercentage}%`} label="de vitórias" />
               <StatItem value={stats.winStreak} label="sequência atual" />
@@ -223,8 +223,8 @@ export const StatsModal: React.FC<StatsModalProps> = ({ isOpen, onClose, stats }
           </button>
         </div>
         
-        <div className="p-4 flex justify-center">
-            <div className="inline-flex items-center gap-2 bg-[#2a2a2a] p-1.5 rounded-xl mb-6">
+        <div className="p-2 sm:p-4 flex justify-center">
+            <div className="inline-flex flex-wrap items-center justify-center gap-2 bg-[#2a2a2a] p-1.5 rounded-xl mb-4 sm:mb-6">
                 <TabButton active={activeTab === 'summary'} onClick={() => setActiveTab('summary')}><Atom size={16}/> Resumo</TabButton>
                 <TabButton active={activeTab === 'guesses'} onClick={() => setActiveTab('guesses')}><BarChart2 size={16}/> Tentativas</TabButton>
                 <TabButton active={activeTab === 'letters'} onClick={() => setActiveTab('letters')}><BookOpen size={16}/> Letras</TabButton>
@@ -232,7 +232,7 @@ export const StatsModal: React.FC<StatsModalProps> = ({ isOpen, onClose, stats }
             </div>
           </div>
         
-        <div className="p-6 pt-0 space-y-6 flex-1">
+        <div className="p-4 sm:p-6 pt-0 space-y-6 flex-1">
           {renderContent()}
         </div>
       </div>

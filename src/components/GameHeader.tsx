@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { HelpCircle, BarChartHorizontal, Home, Zap, Github } from 'lucide-react';
 import { GameStats } from '../utils/stats';
 import { PlayerStatsDisplay } from './PlayerStatsDisplay';
 
 // Componente SVG para Abracadupla (2 grids lado a lado)
-const DuetoIcon: React.FC<{ size?: number }> = ({ size = 22 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+const DuetoIcon: React.FC<{ size?: number; className?: string }> = ({ size = 22, className }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
     {/* Grid esquerdo */}
     <rect x="2" y="4" width="8" height="16" rx="1" stroke="currentColor" strokeWidth="1.5" fill="none"/>
     <rect x="3" y="5" width="2" height="2" fill="currentColor" opacity="0.3"/>
@@ -21,8 +21,8 @@ const DuetoIcon: React.FC<{ size?: number }> = ({ size = 22 }) => (
 );
 
 // Componente SVG para Abracatetra (4 grids em 2x2)
-const TetraIcon: React.FC<{ size?: number }> = ({ size = 22 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+const TetraIcon: React.FC<{ size?: number; className?: string }> = ({ size = 22, className }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className={className}>
     {/* Grid superior esquerdo */}
     <rect x="2" y="2" width="8" height="8" rx="1" stroke="currentColor" strokeWidth="1.5" fill="none"/>
     <rect x="3" y="3" width="2" height="2" fill="currentColor" opacity="0.3"/>
@@ -74,6 +74,21 @@ const HeaderButton: React.FC<{ onClick: () => void; title: string; children: Rea
 );
 
 export function GameHeader({ onShowHelp, onShowStats, onShowAbout, onDueto, onQuarteto, onHome, onSpeedRun, stats, mode, isVimMode }: GameHeaderProps) {
+  const [isModesMenuOpen, setModesMenuOpen] = useState(false);
+  const modesMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (modesMenuRef.current && !modesMenuRef.current.contains(event.target as Node)) {
+        setModesMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [modesMenuRef]);
+
   const modeText = isVimMode ? 'COMMAND' : mode.toUpperCase();
   const vimStatus = isVimMode ? 'CMD' : 'RO';
 
@@ -93,14 +108,16 @@ export function GameHeader({ onShowHelp, onShowStats, onShowAbout, onDueto, onQu
           <HeaderButton onClick={onShowStats} title="Estatísticas" data-tour="stats-button">
             <BarChartHorizontal size={20} className="sm:w-6 sm:h-6" />
           </HeaderButton>
-          <HeaderButton onClick={onShowAbout} title="Sobre o Projeto">
-            <Github size={18} className="sm:w-5 sm:h-5" />
-          </HeaderButton>
+          <div className="hidden sm:block">
+            <HeaderButton onClick={onShowAbout} title="Sobre o Projeto">
+              <Github size={18} className="sm:w-5 sm:h-5" />
+            </HeaderButton>
+          </div>
         </div>
 
         {/* Logo e título central */}
         <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 sm:gap-3 cursor-pointer" onClick={onHome} title="Voltar ao modo normal">
-          <img src="/assets/images/Palavrim.png" alt="Palavrim" className="h-6 w-6 sm:h-9 sm:w-9" />
+          <img src="/assets/images/Palavrim.png" alt="Palavrim" className="hidden sm:block h-6 w-6 sm:h-9 sm:w-9" />
           <h1 className="text-lg sm:text-3xl font-bold font-mono tracking-widest bg-clip-text text-transparent bg-gradient-to-r from-[#8b5cf6] to-[#a855f7]">
             Palavrim
           </h1>
@@ -113,8 +130,8 @@ export function GameHeader({ onShowHelp, onShowStats, onShowAbout, onDueto, onQu
             <PlayerStatsDisplay stats={stats} />
           </div>
           
-          {/* Botões de modo */}
-          <div className="flex items-center gap-1 sm:gap-2">
+          {/* Botões de modo para telas grandes */}
+          <div className="hidden sm:flex items-center gap-1 sm:gap-2">
             <HeaderButton onClick={onHome} title="Modo Normal">
               <Home size={18} className="sm:w-5 sm:h-5" />
             </HeaderButton>
@@ -127,6 +144,31 @@ export function GameHeader({ onShowHelp, onShowStats, onShowAbout, onDueto, onQu
             <HeaderButton onClick={onSpeedRun} title="Modo Mágico">
               <Zap size={18} className="sm:w-5 sm:h-5" />
             </HeaderButton>
+          </div>
+
+          {/* Menu de modos para telas pequenas */}
+          <div className="sm:hidden relative" ref={modesMenuRef}>
+            <HeaderButton onClick={() => setModesMenuOpen(prev => !prev)} title="Mudar modo de jogo">
+              <Zap size={18} />
+            </HeaderButton>
+            {isModesMenuOpen && (
+              <div className="absolute right-0 mt-2 w-48 bg-[#3a3a3a] rounded-md shadow-lg z-20">
+                <div className="py-1">
+                  <a href="#" onClick={(e) => { e.preventDefault(); onHome(); setModesMenuOpen(false); }} className="flex items-center gap-3 px-4 py-2 text-sm text-gray-200 hover:bg-[#4a4a4a]">
+                    <Home size={16} /> Modo Normal
+                  </a>
+                  <a href="#" onClick={(e) => { e.preventDefault(); onDueto(); setModesMenuOpen(false); }} className="flex items-center gap-3 px-4 py-2 text-sm text-gray-200 hover:bg-[#4a4a4a]">
+                    <DuetoIcon size={16} /> Abracadupla
+                  </a>
+                  <a href="#" onClick={(e) => { e.preventDefault(); onQuarteto(); setModesMenuOpen(false); }} className="flex items-center gap-3 px-4 py-2 text-sm text-gray-200 hover:bg-[#4a4a4a]">
+                    <TetraIcon size={16} /> Abracatetra
+                  </a>
+                  <a href="#" onClick={(e) => { e.preventDefault(); onSpeedRun(); setModesMenuOpen(false); }} className="flex items-center gap-3 px-4 py-2 text-sm text-gray-200 hover:bg-[#4a4a4a]">
+                    <Zap size={16} /> Modo Mágico
+                  </a>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>

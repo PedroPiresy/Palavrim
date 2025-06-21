@@ -7,7 +7,7 @@ interface MascotProps {
 
 export const Mascot: React.FC<MascotProps> = ({ message, isCastingSpell = false }) => {
   return (
-    <div className="fixed bottom-16 sm:bottom-20 right-4 sm:right-8 flex flex-col items-center gap-1 sm:gap-2 z-20">
+    <div className="hidden sm:flex fixed bottom-16 sm:bottom-20 right-4 sm:right-8 flex-col items-center gap-1 sm:gap-2 z-20">
       <div className="bg-[#2d2d2d] border-2 border-purple-600 p-2 sm:p-3 rounded-lg rounded-br-none shadow-lg max-w-[200px] sm:max-w-xs animate-fade-in">
         <p className="text-xs sm:text-sm text-purple-200 font-mono text-center">
           {message}
