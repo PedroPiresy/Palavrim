@@ -15,7 +15,7 @@ export const PlayerStatsDisplay: React.FC<PlayerStatsDisplayProps> = ({ stats })
     <div className="flex items-center gap-2 sm:gap-4 text-[#d0d0d0] font-mono text-xs sm:text-sm" data-tour="player-stats-display">
       <div className="flex items-center gap-1 sm:gap-2" title={`Nível ${level}`} data-tour="player-rank">
         <Star size={14} className="sm:w-4 sm:h-4 text-[#facc15]" />
-        <span className="hidden sm:inline truncate max-w-[100px]">{rank}</span>
+        <span className="hidden sm:inline flex-shrink-0">{rank}</span>
         <span className="sm:hidden">Nv.{level}</span>
       </div>
       <div className="w-16 sm:w-32" data-tour="player-xp-bar">
