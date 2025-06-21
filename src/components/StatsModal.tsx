@@ -22,7 +22,7 @@ const StatItem: React.FC<{ value: number | string; label: string }> = ({ value, 
 const TabButton: React.FC<{ active: boolean; onClick: () => void; children: React.ReactNode }> = ({ active, onClick, children }) => (
   <button
     onClick={onClick}
-    className={`px-4 py-2 text-sm font-bold rounded-lg transition-colors duration-200 flex items-center gap-2 ${
+    className={`px-2 sm:px-4 py-2 text-xs sm:text-sm font-bold rounded-lg transition-colors duration-200 flex items-center justify-center gap-1 sm:gap-2 ${
       active
         ? 'bg-purple-600 text-white'
         : 'text-gray-400 hover:bg-[#3a3a3a] hover:text-white'
@@ -224,11 +224,11 @@ export const StatsModal: React.FC<StatsModalProps> = ({ isOpen, onClose, stats }
         </div>
         
         <div className="p-4 flex justify-center">
-            <div className="inline-flex items-center gap-2 bg-[#2a2a2a] p-1.5 rounded-xl mb-6">
-                <TabButton active={activeTab === 'summary'} onClick={() => setActiveTab('summary')}><Atom size={16}/> Resumo</TabButton>
-                <TabButton active={activeTab === 'guesses'} onClick={() => setActiveTab('guesses')}><BarChart2 size={16}/> Tentativas</TabButton>
-                <TabButton active={activeTab === 'letters'} onClick={() => setActiveTab('letters')}><BookOpen size={16}/> Letras</TabButton>
-                <TabButton active={activeTab === 'evolution'} onClick={() => setActiveTab('evolution')}><TrendingUp size={16}/> Evolução</TabButton>
+            <div className="grid grid-cols-2 sm:flex gap-2 bg-[#2a2a2a] p-1.5 rounded-xl mb-6">
+                <TabButton active={activeTab === 'summary'} onClick={() => setActiveTab('summary')}><Atom className="w-3 h-3 sm:w-4 sm:h-4"/> Resumo</TabButton>
+                <TabButton active={activeTab === 'guesses'} onClick={() => setActiveTab('guesses')}><BarChart2 className="w-3 h-3 sm:w-4 sm:h-4"/> Tentativas</TabButton>
+                <TabButton active={activeTab === 'letters'} onClick={() => setActiveTab('letters')}><BookOpen className="w-3 h-3 sm:w-4 sm:h-4"/> Letras</TabButton>
+                <TabButton active={activeTab === 'evolution'} onClick={() => setActiveTab('evolution')}><TrendingUp className="w-3 h-3 sm:w-4 sm:h-4"/> Evolução</TabButton>
             </div>
           </div>
         

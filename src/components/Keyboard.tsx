@@ -19,8 +19,8 @@ export const Keyboard: React.FC<KeyboardProps> = ({
 }) => {
   const keyRows = [
     ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
-    ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'],
-    ['ENTER', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', 'DELETE']
+    ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'DELETE'],
+    ['Z', 'X', 'C', 'V', 'B', 'N', 'M', 'ENTER']
   ];
 
   const getKeyState = (key: string) => {
@@ -29,9 +29,17 @@ export const Keyboard: React.FC<KeyboardProps> = ({
   };
 
   const getKeyClass = (key: string, keyStatus: string) => {
-    const baseClass = "px-2 py-2 sm:px-4 sm:py-4 rounded font-mono text-sm sm:text-base transition-all duration-200 select-none cursor-pointer flex items-center justify-center";
+    const baseClass = "h-14 sm:h-auto sm:py-4 rounded-lg font-mono transition-all duration-200 select-none cursor-pointer flex items-center justify-center";
+    
+    let widthClass;
     const isSpecial = key === 'ENTER' || key === 'DELETE';
-    const widthClass = isSpecial ? 'px-3 sm:px-6 min-w-[60px] sm:min-w-[100px]' : 'min-w-[28px] sm:min-w-[60px]';
+
+    if (isSpecial) {
+      const mobileFlex = key === 'ENTER' ? 'flex-[2]' : 'flex-[1.5]';
+      widthClass = `${mobileFlex} px-2 sm:flex-initial sm:px-6 sm:min-w-[100px]`;
+    } else {
+      widthClass = 'flex-1 px-1 sm:flex-initial sm:px-4 sm:min-w-[60px]';
+    }
     
     if (disabled) {
       return `${baseClass} ${widthClass} bg-[#2d2d2d] text-[#d0d0d0]/50 cursor-not-allowed border border-[#3d3d3d]`;
@@ -81,7 +89,7 @@ export const Keyboard: React.FC<KeyboardProps> = ({
   }, [onKeyPress, onDelete, onEnter, disabled]);
 
   return (
-    <div className="w-full max-w-2xl sm:max-w-4xl mx-auto p-2 sm:p-6 space-y-1 sm:space-y-3">
+    <div className="w-full max-w-2xl sm:max-w-4xl mx-auto p-2 sm:p-6 space-y-2 sm:space-y-3">
       {keyRows.map((row, rowIndex) => (
         <div key={rowIndex} className="flex gap-1 sm:gap-2 justify-center">
           {row.map((key) => {
@@ -94,9 +102,9 @@ export const Keyboard: React.FC<KeyboardProps> = ({
                 disabled={disabled}
               >
                 {key === 'DELETE' ? (
-                  <Delete size={16} className="sm:w-5 sm:h-5" />
+                  <Delete className="h-6 w-6 sm:h-5 sm:w-5" />
                 ) : (
-                  <span className="text-xs sm:text-base">{key}</span>
+                  <span className="text-base sm:text-base">{key}</span>
                 )}
               </button>
             );

@@ -31,7 +31,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, startTour
                 onClose();
                 setTimeout(startTour, 300); // Dá tempo para o modal fechar
               }}
-              className="flex-shrink-0 w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 text-white font-bold rounded-lg hover:bg-purple-500 transition-colors"
+              className="hidden sm:flex flex-shrink-0 w-full sm:w-auto items-center justify-center gap-2 px-4 py-2 bg-purple-600 text-white font-bold rounded-lg hover:bg-purple-500 transition-colors"
             >
               <Wand2 size={18} />
               Fazer Tour Guiado
