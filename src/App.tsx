@@ -163,6 +163,13 @@ function App() {
 
   const navigate = useNavigate();
 
+  // Redireciona para 404 se for mobile
+  //useEffect(() => {
+  //  if (window.innerWidth <= 768) {
+  //    navigate('/notfound');
+  //  }
+  //}, [navigate]);
+
   // Iniciar modo Speed Run
   const iniciarSpeedRun = () => {
     setShowSpeedRunHelp(true);
@@ -926,13 +933,7 @@ function App() {
           <HelpModal
             isOpen={showHelp}
             onClose={() => setShowHelp(false)}
-            startTour={() => {
-              if (window.innerWidth > 768) {
-                setTourOpen(true);
-              } else {
-                showNotification("O tour não está disponível em dispositivos móveis.");
-              }
-            }}
+            startTour={() => setTourOpen(true)}
           />
         </PalavrimLayout>
       } />

@@ -31,26 +31,14 @@ export const api = {
     try {
       const response = await fetch(`${API_BASE_URL}/palavra-aleatoria`);
       if (!response.ok) throw new Error('Erro ao buscar palavra aleatória');
-      const data = await response.json();
-      palavraAtual = data.palavra?.toUpperCase() || 'JOGAR'; // Fallback
+      const palavra = await response.json();
+      palavraAtual = palavra.toUpperCase();
+      console.log(palavraAtual);
       return palavraAtual;
     } catch (error) {
       console.error('Erro na API getPalavraAleatoria:', error);
-      palavraAtual = 'JOGAR'; // Garante que palavraAtual tenha um valor
-      return palavraAtual;
+      return 'PALAVRA';
     }
-  },
-
-  getPalavrasDueto: async (): Promise<{ palavra1: string; palavra2: string }> => {
-    const response = await fetch(`${API_BASE_URL}/dueto`);
-    if (!response.ok) throw new Error('Erro ao buscar palavras para o Dueto');
-    return response.json();
-  },
-
-  getPalavrasTetra: async (): Promise<string[]> => {
-    const response = await fetch(`${API_BASE_URL}/tetra`);
-    if (!response.ok) throw new Error('Erro ao buscar palavras para o Abracatetra');
-    return response.json();
   },
 
   async verificarPalavra(palavra: string): Promise<{ existe: boolean; estados: ('correct' | 'present' | 'absent')[] }> {
