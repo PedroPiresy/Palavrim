@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { HelpCircle, BarChartHorizontal, Home, Zap, Github } from 'lucide-react';
+import { HelpCircle, BarChartHorizontal, Home, Clock, Github, Menu } from 'lucide-react';
 import { GameStats } from '../utils/stats';
 import { PlayerStatsDisplay } from './PlayerStatsDisplay';
 
@@ -163,14 +163,14 @@ export function GameHeader({ onShowHelp, onShowStats, onShowAbout, onDueto, onQu
               <TetraIcon size={18} className="sm:w-5 sm:h-5" />
             </HeaderButton>
             <HeaderButton onClick={onSpeedRun} title="Modo Mágico">
-              <Zap size={18} className="sm:w-5 sm:h-5" />
+              <Clock size={18} className="sm:w-5 sm:h-5" />
             </HeaderButton>
           </div>
 
           {/* Menu dropdown de modos para telas pequenas */}
           <div className="sm:hidden relative" ref={modesMenuRef}>
             <HeaderButton onClick={() => setModesMenuOpen(prev => !prev)} title="Mudar modo de jogo">
-              <Zap size={18} />
+              <Menu size={18} />
             </HeaderButton>
             
             {/* Menu dropdown que aparece quando clicado */}
@@ -194,7 +194,7 @@ export function GameHeader({ onShowHelp, onShowStats, onShowAbout, onDueto, onQu
                   
                   {/* Opção Modo Mágico */}
                   <a href="#" onClick={(e) => { e.preventDefault(); onSpeedRun(); setModesMenuOpen(false); }} className="flex items-center gap-3 px-4 py-2 text-sm text-gray-200 hover:bg-[#4a4a4a]">
-                    <Zap size={16} /> Modo Mágico
+                    <Clock size={16} /> Modo Mágico
                   </a>
                 </div>
               </div>

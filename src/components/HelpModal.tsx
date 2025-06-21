@@ -12,8 +12,8 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, startTour
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-[#1a1a1a] rounded-lg border border-[#3d3d3d] max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-[#2d2d2d] border-b border-[#3d3d3d] p-4 flex items-center justify-between">
+      <div className="bg-[#1a1a1a] rounded-lg border border-[#3d3d3d] max-w-2xl w-full max-h-[90vh] flex flex-col">
+        <div className="flex-shrink-0 bg-[#2d2d2d] border-b border-[#3d3d3d] p-4 flex items-center justify-between">
           <h2 className="text-xl font-bold text-[#d0d0d0] font-mono">Como Jogar</h2>
           <button
             onClick={onClose}
@@ -23,7 +23,7 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, startTour
           </button>
         </div>
 
-        <div className="p-6 space-y-6 text-[#d0d0d0] font-mono">
+        <div className="overflow-y-auto p-6 space-y-6 text-[#d0d0d0] font-mono">
           <div className="bg-purple-900/50 border border-purple-700 rounded-lg p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
             <p className="text-purple-200 text-center sm:text-left">Novo por aqui? Faça um tour guiado pelas novidades!</p>
             <button

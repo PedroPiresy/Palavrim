@@ -120,14 +120,14 @@ function App() {
     triggerMascotMessage('welcome');
   }, []);
 
-  // Reset logic for new games
+  // Reset logic for new games - reseta estados quando um novo jogo começa
   useEffect(() => {
     if (gameState.gameStatus === 'playing' && gameState.guesses.length === 0) {
-      setRevealSpellUses(0);
-      setIsCastingSpell(false);
-      setShouldExplode(false);
-      setShowVictoryModal(false);
-      triggerMascotMessage('welcome');
+      setRevealSpellUses(0);        // Reseta contador de feitiços usados
+      setIsCastingSpell(false);     // Para animações de feitiço
+      setShouldExplode(false);      // Para animações de explosão
+      setShowVictoryModal(false);   // Fecha o modal de vitória/derrota
+      triggerMascotMessage('welcome'); // Mensagem de boas-vindas
     }
   }, [gameState.gameStatus, gameState.guesses.length]);
 
@@ -483,15 +483,16 @@ function App() {
     setShowMeaning(true);
   };
 
+  // Efeito que controla quando mostrar o modal de vitória/derrota
   useEffect(() => {
     if (gameState.gameStatus === 'won') {
       const guessCount = gameState.guesses.length;
       
-      // Verifica se foi na última tentativa
+      // Verifica se foi na última tentativa (vitória no limite)
       const wasLastAttempt = guessCount === gameState.maxAttempts;
       
       if (wasLastAttempt) {
-        // Ativa a sequência de animações épicas
+        // Para vitórias no limite, ativa sequência de animações épicas antes do modal
         setIsCastingSpell(true);
         setTimeout(() => {
           setShouldExplode(true);
@@ -506,6 +507,7 @@ function App() {
         setShowVictoryModal(true);
       }
       
+      // Mensagens do mascote baseadas no desempenho
       if (guessCount <= 2) {
         triggerMascotMessage('flawlessWin');
       } else if (guessCount === gameState.maxAttempts) {
@@ -514,6 +516,7 @@ function App() {
         triggerMascotMessage('win');
       }
 
+      // Atualiza estatísticas do jogador
       setStats(prevStats => {
         const { newStats, leveledUp, xpGained } = updateStatsOnWin(prevStats, guessCount);
         showNotification(`+${xpGained} XP!`);
@@ -527,13 +530,19 @@ function App() {
         return newStats;
       });
     } else if (gameState.gameStatus === 'lost') {
+      // Para derrotas, mostra mensagem do mascote e atualiza estatísticas
       triggerMascotMessage('loss');
       setStats(prevStats => {
         const newStats = updateStatsOnLoss(prevStats);
         saveStats(newStats);
         return newStats;
       });
+      
+      // Para derrotas, também mostra o modal imediatamente
+      setShowVictoryModal(true);
     }
+    
+    // Atualiza a chave do mascote quando o jogo termina
     if (gameState.gameStatus !== 'playing') {
       setMascotKey(prev => prev + 1);
     }
@@ -777,6 +786,7 @@ function App() {
                 </div>
               </div>
             )}
+            {/* Modal de vitória/derrota para modo normal e speedrun */}
             {(modo === 'normal' || modo === 'speedrun') && gameState.gameStatus !== 'playing' && showVictoryModal && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
                 <div className="p-4 sm:p-6 bg-[#2d2d2d] rounded-lg border border-[#3d3d3d] shadow-xl min-w-[280px] sm:min-w-[320px] max-w-full flex flex-col items-center">
