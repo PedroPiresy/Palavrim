@@ -66,7 +66,7 @@ const HeaderButton: React.FC<{ onClick: () => void; title: string; children: Rea
   <button
     onClick={onClick}
     title={title}
-    className="p-2 rounded-lg text-gray-300 hover:bg-[#3a3a3a] hover:text-white transition-all duration-200"
+    className="p-1.5 sm:p-2 rounded-lg text-gray-300 hover:bg-[#3a3a3a] hover:text-white transition-all duration-200"
     data-tour={dataTour}
   >
     {children}
@@ -79,45 +79,53 @@ export function GameHeader({ onShowHelp, onShowStats, onShowAbout, onDueto, onQu
 
   return (
     <header className="shadow-lg">
-      <div className="w-full bg-[#6d28d9] py-1.5 px-4 flex justify-between items-center font-mono text-xs text-purple-200">
-        <span>{`>_ palavrim [${vimStatus}]`}</span>
-        <span>-- {modeText} --</span>
+      <div className="w-full bg-[#6d28d9] py-1 px-2 sm:py-1.5 sm:px-4 flex justify-between items-center font-mono text-xs text-purple-200">
+        <span className="truncate">{`>_ palavrim [${vimStatus}]`}</span>
+        <span className="hidden sm:block">-- {modeText} --</span>
       </div>
       
-      <div className="flex items-center justify-between py-3 px-6 bg-[#2d2d2d] rounded-b-xl">
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-between py-2 px-2 sm:py-3 sm:px-6 bg-[#2d2d2d] rounded-b-xl">
+        {/* Botões da esquerda */}
+        <div className="flex items-center gap-1 sm:gap-2">
           <HeaderButton onClick={onShowHelp} title="Como jogar">
-            <HelpCircle size={24} />
+            <HelpCircle size={20} className="sm:w-6 sm:h-6" />
           </HeaderButton>
           <HeaderButton onClick={onShowStats} title="Estatísticas" data-tour="stats-button">
-            <BarChartHorizontal size={24} />
+            <BarChartHorizontal size={20} className="sm:w-6 sm:h-6" />
           </HeaderButton>
           <HeaderButton onClick={onShowAbout} title="Sobre o Projeto">
-            <Github size={22} />
+            <Github size={18} className="sm:w-5 sm:h-5" />
           </HeaderButton>
         </div>
 
-        <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-3 cursor-pointer" onClick={onHome} title="Voltar ao modo normal">
-          <img src="/assets/images/Palavrim.png" alt="Palavrim" className="h-9 w-9" />
-          <h1 className="text-3xl font-bold font-mono tracking-widest bg-clip-text text-transparent bg-gradient-to-r from-[#8b5cf6] to-[#a855f7]">
+        {/* Logo e título central */}
+        <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 sm:gap-3 cursor-pointer" onClick={onHome} title="Voltar ao modo normal">
+          <img src="/assets/images/Palavrim.png" alt="Palavrim" className="h-6 w-6 sm:h-9 sm:w-9" />
+          <h1 className="text-lg sm:text-3xl font-bold font-mono tracking-widest bg-clip-text text-transparent bg-gradient-to-r from-[#8b5cf6] to-[#a855f7]">
             Palavrim
           </h1>
         </div>
         
-        <div className="flex items-center gap-6">
-          <PlayerStatsDisplay stats={stats} />
-        <div className="flex items-center gap-2">
+        {/* Botões da direita */}
+        <div className="flex items-center gap-2 sm:gap-6">
+          {/* Stats do jogador - oculto em mobile muito pequeno */}
+          <div className="hidden sm:block">
+            <PlayerStatsDisplay stats={stats} />
+          </div>
+          
+          {/* Botões de modo */}
+          <div className="flex items-center gap-1 sm:gap-2">
             <HeaderButton onClick={onHome} title="Modo Normal">
-              <Home size={22} />
+              <Home size={18} className="sm:w-5 sm:h-5" />
             </HeaderButton>
             <HeaderButton onClick={onDueto} title="Abracadupla">
-              <DuetoIcon size={22} />
+              <DuetoIcon size={18} className="sm:w-5 sm:h-5" />
             </HeaderButton>
             <HeaderButton onClick={onQuarteto} title="Abracatetra">
-              <TetraIcon size={22} />
+              <TetraIcon size={18} className="sm:w-5 sm:h-5" />
             </HeaderButton>
             <HeaderButton onClick={onSpeedRun} title="Modo Mágico">
-              <Zap size={22} />
+              <Zap size={18} className="sm:w-5 sm:h-5" />
             </HeaderButton>
           </div>
         </div>

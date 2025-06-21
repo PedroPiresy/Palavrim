@@ -12,16 +12,17 @@ export const PlayerStatsDisplay: React.FC<PlayerStatsDisplayProps> = ({ stats })
   const xpProgressPercentage = Math.min(100, Math.floor((xp / xpForNextLevel) * 100));
 
   return (
-    <div className="flex items-center gap-4 text-[#d0d0d0] font-mono text-sm" data-tour="player-stats-display">
-      <div className="flex items-center gap-2" title={`Nível ${level}`} data-tour="player-rank">
-        <Star size={16} className="text-[#facc15]" />
-        <span>{rank}</span>
+    <div className="flex items-center gap-2 sm:gap-4 text-[#d0d0d0] font-mono text-xs sm:text-sm" data-tour="player-stats-display">
+      <div className="flex items-center gap-1 sm:gap-2" title={`Nível ${level}`} data-tour="player-rank">
+        <Star size={14} className="sm:w-4 sm:h-4 text-[#facc15]" />
+        <span className="hidden sm:inline truncate max-w-[100px]">{rank}</span>
+        <span className="sm:hidden">Nv.{level}</span>
       </div>
-      <div className="w-32" data-tour="player-xp-bar">
-        <div className="flex items-center gap-1.5">
-          <div className="w-full bg-[#3a3a3a] rounded-full h-2.5" title={`${xp} / ${xpForNextLevel} XP`}>
+      <div className="w-16 sm:w-32" data-tour="player-xp-bar">
+        <div className="flex items-center gap-1 sm:gap-1.5">
+          <div className="w-full bg-[#3a3a3a] rounded-full h-2 sm:h-2.5" title={`${xp} / ${xpForNextLevel} XP`}>
             <div 
-              className="bg-gradient-to-r from-[#8b5cf6] to-[#a855f7] h-2.5 rounded-full transition-all duration-500" 
+              className="bg-gradient-to-r from-[#8b5cf6] to-[#a855f7] h-2 sm:h-2.5 rounded-full transition-all duration-500" 
               style={{ width: `${xpProgressPercentage}%` }}
             />
           </div>
@@ -30,4 +31,4 @@ export const PlayerStatsDisplay: React.FC<PlayerStatsDisplayProps> = ({ stats })
       </div>
     </div>
   );
-}; 
+};

@@ -7,22 +7,22 @@ interface MascotProps {
 
 export const Mascot: React.FC<MascotProps> = ({ message, isCastingSpell = false }) => {
   return (
-    <div className="fixed bottom-20 right-8 flex flex-col items-center gap-2 z-20">
-      <div className="bg-[#2d2d2d] border-2 border-purple-600 p-3 rounded-lg rounded-br-none shadow-lg max-w-xs animate-fade-in">
-        <p className="text-sm text-purple-200 font-mono text-center">
+    <div className="fixed bottom-16 sm:bottom-20 right-4 sm:right-8 flex flex-col items-center gap-1 sm:gap-2 z-20">
+      <div className="bg-[#2d2d2d] border-2 border-purple-600 p-2 sm:p-3 rounded-lg rounded-br-none shadow-lg max-w-[200px] sm:max-w-xs animate-fade-in">
+        <p className="text-xs sm:text-sm text-purple-200 font-mono text-center">
           {message}
         </p>
       </div>
       <img 
         src="/assets/images/Palavrim.png" 
         alt="Mascote Mago"
-        className={`w-20 h-20 ${isCastingSpell ? 'animate-cast-spell' : ''}`}
+        className={`w-12 h-12 sm:w-20 sm:h-20 ${isCastingSpell ? 'animate-cast-spell' : ''}`}
       />
       
       {/* Feitiço voando */}
       {isCastingSpell && (
         <div className="fixed inset-0 pointer-events-none z-30">
-          <div className="absolute bottom-20 right-8 w-4 h-4 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full animate-spell-flight shadow-lg shadow-purple-400/50"></div>
+          <div className="absolute bottom-16 sm:bottom-20 right-4 sm:right-8 w-3 h-3 sm:w-4 sm:h-4 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full animate-spell-flight shadow-lg shadow-purple-400/50"></div>
         </div>
       )}
     </div>
@@ -75,4 +75,4 @@ const styles = `
 const styleSheet = document.createElement("style");
 styleSheet.type = "text/css";
 styleSheet.innerText = styles;
-document.head.appendChild(styleSheet); 
+document.head.appendChild(styleSheet);

@@ -39,9 +39,9 @@ export const Timer: React.FC<TimerProps> = ({ isRunning, onTimeUpdate, className
   };
 
   return (
-    <div className={`flex items-center justify-center gap-2 text-[#8b5cf6] font-mono font-bold ${className}`}>
-      <Clock size={20} />
-      <span className="text-xl">{formatTime(time)}</span>
+    <div className={`flex items-center justify-center gap-1 sm:gap-2 text-[#8b5cf6] font-mono font-bold ${className}`}>
+      <Clock size={16} className="sm:w-5 sm:h-5" />
+      <span className="text-lg sm:text-xl">{formatTime(time)}</span>
     </div>
   );
-}; 
+};

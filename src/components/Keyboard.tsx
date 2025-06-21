@@ -29,9 +29,9 @@ export const Keyboard: React.FC<KeyboardProps> = ({
   };
 
   const getKeyClass = (key: string, keyStatus: string) => {
-    const baseClass = "px-4 py-4 rounded font-mono text-base transition-all duration-200 select-none cursor-pointer";
+    const baseClass = "px-2 py-2 sm:px-4 sm:py-4 rounded font-mono text-sm sm:text-base transition-all duration-200 select-none cursor-pointer flex items-center justify-center";
     const isSpecial = key === 'ENTER' || key === 'DELETE';
-    const widthClass = isSpecial ? 'px-6 min-w-[100px]' : 'min-w-[60px]';
+    const widthClass = isSpecial ? 'px-3 sm:px-6 min-w-[60px] sm:min-w-[100px]' : 'min-w-[28px] sm:min-w-[60px]';
     
     if (disabled) {
       return `${baseClass} ${widthClass} bg-[#2d2d2d] text-[#d0d0d0]/50 cursor-not-allowed border border-[#3d3d3d]`;
@@ -81,9 +81,9 @@ export const Keyboard: React.FC<KeyboardProps> = ({
   }, [onKeyPress, onDelete, onEnter, disabled]);
 
   return (
-    <div className="w-full max-w-4xl mx-auto p-6 space-y-3">
+    <div className="w-full max-w-2xl sm:max-w-4xl mx-auto p-2 sm:p-6 space-y-1 sm:space-y-3">
       {keyRows.map((row, rowIndex) => (
-        <div key={rowIndex} className="flex gap-2 justify-center">
+        <div key={rowIndex} className="flex gap-1 sm:gap-2 justify-center">
           {row.map((key) => {
             const keyStatus = getKeyState(key);
             return (
@@ -94,9 +94,9 @@ export const Keyboard: React.FC<KeyboardProps> = ({
                 disabled={disabled}
               >
                 {key === 'DELETE' ? (
-                  <Delete size={20} />
+                  <Delete size={16} className="sm:w-5 sm:h-5" />
                 ) : (
-                  key
+                  <span className="text-xs sm:text-base">{key}</span>
                 )}
               </button>
             );
