@@ -1,6 +1,6 @@
 # 🧙‍♂️ Palavrim
 
-Palavrim é uma releitura moderna do clássico jogo de adivinhar palavras, inspirado em jogos como Wordle e Termo. Desenvolvido com React, Vite, TypeScript e Tailwind CSS, oferece uma experiência de jogo fluida, responsiva e visualmente agradável.
+Palavrim é uma releitura moderna do clássico jogo de adivinhar palavras, inspirado em jogos como Wordle e Termo. Desenvolvido com React, Vite, TypeScript e Tailwind CSS, oferece uma experiência de jogo fluida, responsiva e visualmente agradável, agora com total suporte para dispositivos móveis.
 
 <p align="center">
   <img src="public/assets/images/Palavrim.png" alt="Logo do Palavrim" width="200" />
@@ -12,7 +12,23 @@ Palavrim é uma releitura moderna do clássico jogo de adivinhar palavras, inspi
 
 ---
 
-## 🎮 Demonstração
+## 📸 Visão Geral
+
+<p align="center">
+   <img src="https://github.com/user-attachments/assets/65ca7050-1a38-4f99-b19c-8e62bf31d355" alt="Screenshot do Palavrim no Desktop" width="90%">
+  <br>
+  <em>Versão para Desktop</em>
+</p>
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/00057919-b6f2-472b-a3aa-d651062e489f" alt="Screenshot do Palavrim no Mobile" width="35%">
+ <br>
+  <em>Versão para Mobile</em>
+</p>
+
+---
+
+## 🎮 Como Jogar
 
 - 👉 [Jogue agora!](https://palavrim.vercel.app)
 - 🌍 [API Online](https://palavrimapi.onrender.com)
@@ -21,18 +37,17 @@ Palavrim é uma releitura moderna do clássico jogo de adivinhar palavras, inspi
 
 ## ✨ Funcionalidades
 
-- **Modo Clássico**: Adivinhe a palavra do dia em até 6 tentativas
-- **Speed Run**: Teste sua velocidade com cronômetro integrado
-- **Modos Avançados**:
-  - **Dueto (Abracadupla)**: Adivinhe duas palavras simultaneamente
-  - **Quarteto (Abracatetra)**: Desafie-se com quatro palavras ao mesmo tempo
-- **Estatísticas Locais**: Progresso salvo no navegador com gráficos de distribuição
-- **Integração Wiktionary**: Visualize o significado das palavras descobertas
-- **Modo Terminal Vim**:
-  - `Shift + :` para ativar comandos
-  - `q!` para reiniciar o jogo
-  - `admin` para revelar a resposta (modo desenvolvedor)
-- **Interface Moderna**: Design minimalista com tema escuro e componentes responsivos
+- **🔮 Modos de Jogo Variados**:
+  - **Clássico**: Adivinhe a palavra do dia em até 6 tentativas.
+  - **Speed Run**: Teste sua velocidade com um cronômetro.
+  - **Dueto (Abracadupla)**: Adivinhe duas palavras simultaneamente.
+  - **Quarteto (Abracatetra)**: Desafie-se com quatro palavras ao mesmo tempo.
+- **📊 Estatísticas Detalhadas**: Acompanhe seu progresso com gráficos e dados salvos localmente.
+- **🪄 Livro de Feitiços (Power-Ups)**: Use feitiços como "Revelar Letra" para te ajudar nos desafios.
+- **🧙 Mascote Interativo**: Receba dicas e mensagens do nosso mago mascote.
+- **📚 Integração com Wiktionary**: Descubra o significado das palavras que você acertar.
+- **⌨️ Modo Terminal Vim**: Para os entusiastas de terminal, com comandos como `q!` e `admin`.
+- **📱 Design Responsivo**: Interface moderna e fluida que se adapta perfeitamente a desktops e dispositivos móveis.
 
 ---
 
@@ -140,8 +155,8 @@ npm run build
 
 ## 🛣️ Roadmap
 
+- [x] Melhorias na responsividade mobile
 - [ ] Testes automatizados (Jest + React Testing Library)
-- [ ] Melhorias na responsividade mobile
 - [ ] Novos modos de jogo
 - [ ] Sistema de conquistas
 - [ ] Modo multiplayer
