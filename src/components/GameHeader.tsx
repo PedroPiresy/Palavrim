@@ -1,5 +1,5 @@
 import React from 'react';
-import { HelpCircle, BarChartHorizontal, Home, Zap } from 'lucide-react';
+import { HelpCircle, BarChartHorizontal, Home, Zap, Github } from 'lucide-react';
 import { GameStats } from '../utils/stats';
 import { PlayerStatsDisplay } from './PlayerStatsDisplay';
 
@@ -52,6 +52,7 @@ const TetraIcon: React.FC<{ size?: number }> = ({ size = 22 }) => (
 interface GameHeaderProps {
   onShowHelp: () => void;
   onShowStats: () => void;
+  onShowAbout: () => void;
   onDueto: () => void;
   onQuarteto: () => void;
   onHome: () => void;
@@ -61,17 +62,18 @@ interface GameHeaderProps {
   isVimMode: boolean;
 }
 
-const HeaderButton: React.FC<{ onClick: () => void; title: string; children: React.ReactNode }> = ({ onClick, title, children }) => (
+const HeaderButton: React.FC<{ onClick: () => void; title: string; children: React.ReactNode; 'data-tour'?: string }> = ({ onClick, title, children, 'data-tour': dataTour }) => (
   <button
     onClick={onClick}
     title={title}
     className="p-2 rounded-lg text-gray-300 hover:bg-[#3a3a3a] hover:text-white transition-all duration-200"
+    data-tour={dataTour}
   >
     {children}
   </button>
 );
 
-export function GameHeader({ onShowHelp, onShowStats, onDueto, onQuarteto, onHome, onSpeedRun, stats, mode, isVimMode }: GameHeaderProps) {
+export function GameHeader({ onShowHelp, onShowStats, onShowAbout, onDueto, onQuarteto, onHome, onSpeedRun, stats, mode, isVimMode }: GameHeaderProps) {
   const modeText = isVimMode ? 'COMMAND' : mode.toUpperCase();
   const vimStatus = isVimMode ? 'CMD' : 'RO';
 
@@ -87,8 +89,11 @@ export function GameHeader({ onShowHelp, onShowStats, onDueto, onQuarteto, onHom
           <HeaderButton onClick={onShowHelp} title="Como jogar">
             <HelpCircle size={24} />
           </HeaderButton>
-          <HeaderButton onClick={onShowStats} title="Estatísticas">
+          <HeaderButton onClick={onShowStats} title="Estatísticas" data-tour="stats-button">
             <BarChartHorizontal size={24} />
+          </HeaderButton>
+          <HeaderButton onClick={onShowAbout} title="Sobre o Projeto">
+            <Github size={22} />
           </HeaderButton>
         </div>
 
@@ -98,10 +103,10 @@ export function GameHeader({ onShowHelp, onShowStats, onDueto, onQuarteto, onHom
             Palavrim
           </h1>
         </div>
-
+        
         <div className="flex items-center gap-6">
           <PlayerStatsDisplay stats={stats} />
-          <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2">
             <HeaderButton onClick={onHome} title="Modo Normal">
               <Home size={22} />
             </HeaderButton>

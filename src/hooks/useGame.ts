@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { GameState, LetterState, KeyboardKey, SpeedRunStats } from '../types/game';
 import { api } from '../utils/api';
 
-export type GameEvent = 'invalidWord' | 'duplicateGuess';
+export type GameEvent = 'invalidWord' | 'duplicateGuess' | 'oneLetterAway';
 
 export const useGame = (
   showNotification?: (msg: string) => void,
@@ -231,6 +231,24 @@ export const useGame = (
     if (gameState.gameStatus !== 'playing') return;
     let guessArr = [...gameState.currentGuess];
     guessArr[selectedIndex] = letter.toUpperCase();
+    
+    const newGuessString = guessArr.join('');
+    if (
+      newGuessString.length === wordLength &&
+      !guessArr.includes('') &&
+      newGuessString !== palavraCorreta
+    ) {
+      let diff = 0;
+      for (let i = 0; i < wordLength; i++) {
+        if (newGuessString[i] !== palavraCorreta[i]) {
+          diff++;
+        }
+      }
+      if (diff === 1) {
+        onGameEvent?.('oneLetterAway');
+      }
+    }
+
     setGameState(prev => ({
       ...prev,
       currentGuess: guessArr

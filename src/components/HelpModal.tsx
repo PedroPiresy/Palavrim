@@ -1,12 +1,13 @@
 import React from 'react';
-import { X, Star, Zap, Trophy } from 'lucide-react';
+import { X, Star, Zap, Trophy, Wand2 } from 'lucide-react';
 
 interface HelpModalProps {
   isOpen: boolean;
   onClose: () => void;
+  startTour: () => void;
 }
 
-export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
+export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose, startTour }) => {
   if (!isOpen) return null;
 
   return (
@@ -21,8 +22,22 @@ export const HelpModal: React.FC<HelpModalProps> = ({ isOpen, onClose }) => {
             <X size={20} />
           </button>
         </div>
-        
+
         <div className="p-6 space-y-6 text-[#d0d0d0] font-mono">
+          <div className="bg-purple-900/50 border border-purple-700 rounded-lg p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p className="text-purple-200 text-center sm:text-left">Novo por aqui? Faça um tour guiado pelas novidades!</p>
+            <button
+              onClick={() => {
+                onClose();
+                setTimeout(startTour, 300); // Dá tempo para o modal fechar
+              }}
+              className="flex-shrink-0 w-full sm:w-auto flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 text-white font-bold rounded-lg hover:bg-purple-500 transition-colors"
+            >
+              <Wand2 size={18} />
+              Fazer Tour Guiado
+            </button>
+          </div>
+        
           {/* Como Jogar */}
           <div className="space-y-4">
             <h3 className="text-lg font-semibold text-[#8b5cf6] flex items-center gap-2">

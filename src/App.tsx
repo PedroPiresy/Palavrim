@@ -13,9 +13,20 @@ import { api } from './utils/api';
 import PalavrimLayout from './components/PalavrimLayout';
 import { Routes, Route, useNavigate } from 'react-router-dom';
 import NotFound from './NotFound';
-import { GameStats, loadStats, saveStats, getInitialStats, updateStatsOnWin, updateStatsOnLoss } from './utils/stats';
+import {
+  GameStats,
+  loadStats,
+  saveStats,
+  getInitialStats,
+  updateStatsOnWin,
+  updateStatsOnLoss,
+  updateLetterFrequency,
+  updateWeeklyEvolution,
+} from './utils/stats';
 import { getMascotMessage, MessageType } from './utils/mascotMessages';
 import { Mascot } from './components/Mascot';
+import { useTour } from '@reactour/tour';
+import { AboutModal } from './components/AboutModal';
 
 function App() {
   const [notification, setNotification] = useState<string>('');
@@ -63,18 +74,32 @@ function App() {
     isSpeedRunActive,
     speedRunTime,
     formatTime
-  } = useGame(showNotification, (event) => triggerMascotMessage(event as MessageType));
+  } = useGame(showNotification, (event) => {
+    if (event === 'oneLetterAway') {
+      const isLastGuess = gameState.guesses.length === gameState.maxAttempts - 1;
+      if (!isLastGuess) {
+        triggerMascotMessage(event as MessageType);
+      }
+    } else {
+      triggerMascotMessage(event as MessageType);
+    }
+  });
 
   const [showHelp, setShowHelp] = useState(true);
   const [showSpeedRunHelp, setShowSpeedRunHelp] = useState(false);
   const [showStats, setShowStats] = useState(false);
+  const [showAbout, setShowAbout] = useState(false);
   const [stats, setStats] = useState<GameStats>(getInitialStats());
   const [modo, setModo] = useState<'normal' | 'dueto' | 'abracatetra' | 'speedrun'>('normal');
   const [revealSpellUses, setRevealSpellUses] = useState(0);
+  const { setIsOpen: setTourOpen } = useTour();
 
   useEffect(() => {
     const today = new Date().toISOString().split('T')[0];
-    const stats = loadStats();
+    let stats = loadStats();
+
+    // Garante que a semana atual existe no histórico
+    stats = updateWeeklyEvolution(stats);
 
     if (stats.lastDailyBonus !== today) {
       const manaToAdd = 15;
@@ -89,6 +114,7 @@ function App() {
       showNotification(`✨ +${manaToAdd} de Mana por seu retorno!`);
     } else {
       setStats(stats);
+      saveStats(stats);
     }
 
     triggerMascotMessage('welcome');
@@ -517,9 +543,14 @@ function App() {
     if (gameState.gameStatus !== 'playing' || gameState.guesses.length === 0) return;
 
     const lastGuess = gameState.guesses[gameState.guesses.length - 1];
+    const isAllGray = checkGuessIsAllGray(lastGuess);
 
-    if (gameState.guesses.length === 1 && checkGuessIsAllGray(lastGuess)) {
-      triggerMascotMessage('firstGuessFlop');
+    if (isAllGray) {
+      if (gameState.guesses.length === 1) {
+        triggerMascotMessage('firstGuessFlop');
+      } else {
+        triggerMascotMessage('anotherBadGuess');
+      }
     } else if (checkGuessHasPresentAndCorrect(lastGuess)) {
       triggerMascotMessage('makingProgress');
     } else if (checkGuessHasPresentWithoutCorrect(lastGuess)) {
@@ -556,6 +587,18 @@ function App() {
     showNotification(`🔮 Feitiço lançado! Uma letra foi revelada no grid.`);
   };
 
+  // Efeito para registrar a frequência de letras após cada palpite
+  useEffect(() => {
+    if (gameState.guesses.length > 0) {
+      const lastGuess = gameState.guesses[gameState.guesses.length - 1];
+      setStats(prevStats => {
+        const newStats = updateLetterFrequency(prevStats, lastGuess);
+        saveStats(newStats);
+        return newStats;
+      });
+    }
+  }, [gameState.guesses]);
+
   if (loading || dueto.loading || tetra.loading) {
     return (
       <div className="min-h-screen bg-[#1a1a1a] flex items-center justify-center">
@@ -574,20 +617,21 @@ function App() {
       <Route path="/notfound" element={<NotFound />} />
       <Route path="/*" element={
         <PalavrimLayout>
-          <GameHeader
-            onShowHelp={() => setShowHelp(true)}
-            onShowStats={() => {
-              setStats(loadStats());
-              setShowStats(true);
-            }}
-            onDueto={iniciarDueto}
-            onQuarteto={iniciarTetra}
-            onHome={voltarParaNormal}
-            onSpeedRun={iniciarSpeedRun}
+            <GameHeader
+              onShowHelp={() => setShowHelp(true)}
+              onShowStats={() => {
+                setStats(loadStats());
+                setShowStats(true);
+              }}
+              onShowAbout={() => setShowAbout(true)}
+              onDueto={iniciarDueto}
+              onQuarteto={iniciarTetra}
+              onHome={voltarParaNormal}
+              onSpeedRun={iniciarSpeedRun}
             stats={stats}
             mode={modo}
             isVimMode={modoComando}
-          />
+            />
           <main className="flex-1 flex flex-col items-center justify-center gap-4 max-w-7xl mx-auto w-full">
             {notification && (
               <div className="w-full flex justify-center mb-4">
@@ -881,11 +925,13 @@ function App() {
               onClose={() => setShowStats(false)}
               stats={stats}
             />
+            <AboutModal isOpen={showAbout} onClose={() => setShowAbout(false)} />
             {mascotMessage && <Mascot key={mascotKey} message={mascotMessage} isCastingSpell={isCastingSpell} />}
           </main>
           <HelpModal
             isOpen={showHelp}
             onClose={() => setShowHelp(false)}
+            startTour={() => setTourOpen(true)}
           />
         </PalavrimLayout>
       } />

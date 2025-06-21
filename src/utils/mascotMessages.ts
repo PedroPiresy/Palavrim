@@ -3,7 +3,8 @@ import { ranks } from './stats';
 export type MessageType = 
   'welcome' | 'win' | 'loss' | 'levelUp' | 'generic' |
   'firstGuessFlop' | 'lastAttempt' | 'clutchWin' | 'flawlessWin' |
-  'usedSpell' | 'duplicateGuess' | 'invalidWord' | 'foundPresent' | 'makingProgress';
+  'usedSpell' | 'duplicateGuess' | 'invalidWord' | 'foundPresent' | 'makingProgress' |
+  'oneLetterAway' | 'anotherBadGuess';
 
 const messages: Record<MessageType, string[]> = {
   welcome: [
@@ -41,6 +42,11 @@ const messages: Record<MessageType, string[]> = {
     "Um começo... humilde. Para dizer o mínimo.",
     "Nenhuma letra? Audacioso. E completamente errado.",
     "Isso foi um palpite ou um espirro no teclado?",
+  ],
+  anotherBadGuess: [
+    "Ainda nenhuma letra... Você está tentando adivinhar ou me irritar?",
+    "Sério? Outra vez? Todas as letras erradas. De novo.",
+    "Estou começando a achar que você está fazendo isso de propósito.",
   ],
   lastAttempt: [
     "Sua última chance. Sem pressão.",
@@ -83,6 +89,12 @@ const messages: Record<MessageType, string[]> = {
     "Um bom progresso. As peças do enigma começam a se encaixar.",
     "Verde e amarelo... um bom presságio. Continue neste caminho.",
     "Excelente! Você está desemaranhando o feitiço da palavra.",
+  ],
+  oneLetterAway: [
+    "É agora! Você está a um sopro de resolver o enigma!",
+    "Só mais uma letra! Sinto a magia se concentrando!",
+    "Você conseguiu! Ou quase... Não erre agora.",
+    "Está na ponta da língua... ou melhor, dos dedos!",
   ]
 };
 
