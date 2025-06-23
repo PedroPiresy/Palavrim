@@ -1,13 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { GameHeader } from './components/GameHeader';
 import { GameGrid } from './components/GameGrid';
+import { DuetoGrid } from './components/DuetoGrid';
+import { TetraGrid } from './components/TetraGrid';
 import { Keyboard } from './components/Keyboard';
 import { Spellbook } from './components/Spellbook';
 import { HelpModal } from './components/HelpModal';
 import { SpeedRunHelpModal } from './components/SpeedRunHelpModal';
+import { DuetoHelpModal } from './components/DuetoHelpModal';
+import { TetraHelpModal } from './components/TetraHelpModal';
 import { StatsModal } from './components/StatsModal';
 import { Notification } from './components/Notification';
 import { useGame, GameEvent } from './hooks/useGame';
+import { useDueto } from './hooks/useDueto';
+import { useTetra } from './hooks/useTetra';
 import { Loader2, Home, Play, BookOpen, BarChartHorizontal } from 'lucide-react';
 import { api } from './utils/api';
 import PalavrimLayout from './components/PalavrimLayout';
@@ -85,8 +91,31 @@ function App() {
     }
   });
 
+  // Hooks para os novos modos
+  const {
+    duetoState,
+    getLetterStates: getDuetoLetterStates,
+    getKeyboardStates: getDuetoKeyboardStates,
+    addLetter: addDuetoLetter,
+    removeLetter: removeDuetoLetter,
+    submitGuess: submitDuetoGuess,
+    restartDueto,
+  } = useDueto(showNotification);
+
+  const {
+    tetraState,
+    getLetterStates: getTetraLetterStates,
+    getKeyboardStates: getTetraKeyboardStates,
+    addLetter: addTetraLetter,
+    removeLetter: removeTetraLetter,
+    submitGuess: submitTetraGuess,
+    restartTetra,
+  } = useTetra(showNotification);
+
   const [showHelp, setShowHelp] = useState(true);
   const [showSpeedRunHelp, setShowSpeedRunHelp] = useState(false);
+  const [showDuetoHelp, setShowDuetoHelp] = useState(false);
+  const [showTetraHelp, setShowTetraHelp] = useState(false);
   const [showStats, setShowStats] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
   const [stats, setStats] = useState<GameStats>(getInitialStats());
@@ -131,44 +160,12 @@ function App() {
     }
   }, [gameState.gameStatus, gameState.guesses.length]);
 
-  // Estado para Dueto
-  const [dueto, setDueto] = useState({
-    word1: '',
-    word2: '',
-    guesses: [] as string[],
-    currentGuess: '',
-    status1: 'playing' as 'playing' | 'won' | 'lost',
-    status2: 'playing' as 'playing' | 'won' | 'lost',
-    maxAttempts: 7,
-    loading: false,
-  });
-
-  // Estado para Abracatetra
-  const [tetra, setTetra] = useState({
-    words: [ '', '', '', '' ],
-    guesses: [] as string[],
-    currentGuess: '',
-    status: [ 'playing', 'playing', 'playing', 'playing' ] as ('playing' | 'won' | 'lost')[],
-    maxAttempts: 9,
-    loading: false,
-  });
-
   // Estado do modo comando Vim
   const [modoComando, setModoComando] = useState(false);
   const [comando, setComando] = useState('');
   const inputRef = React.useRef<HTMLInputElement>(null);
 
-  // Adicionar estado para grid ativo no modo dueto
-  const [duetoAtivo, setDuetoAtivo] = useState<1 | 2>(1);
-
   const navigate = useNavigate();
-
-  // Redireciona para 404 se for mobile
-  //useEffect(() => {
-  //  if (window.innerWidth <= 768) {
-  //    navigate('/notfound');
-  //  }
-  //}, [navigate]);
 
   // Iniciar modo Speed Run
   const iniciarSpeedRun = () => {
@@ -184,201 +181,24 @@ function App() {
 
   // Iniciar modo Dueto
   const iniciarDueto = async () => {
-    navigate('/notfound');
+    setShowDuetoHelp(true);
+  };
+
+  // Começar Dueto
+  const comecarDueto = async () => {
+    setShowDuetoHelp(false);
+    setModo('dueto');
   };
 
   // Iniciar modo Abracatetra
   const iniciarTetra = async () => {
-    navigate('/notfound');
+    setShowTetraHelp(true);
   };
 
-  // Modificar funções de digitação do dueto para só permitir digitação no grid ativo
-  const addLetterDueto = (letter: string) => {
-    if (modoComando) return;
-    if ((duetoAtivo === 1 && dueto.status1 !== 'playing') ||
-        (duetoAtivo === 2 && dueto.status2 !== 'playing')) return;
-    if (dueto.status1 !== 'playing' && dueto.status2 !== 'playing') return;
-    if (dueto.currentGuess.length >= 5) return;
-    setDueto(prev => ({ ...prev, currentGuess: prev.currentGuess + letter.toUpperCase() }));
-  };
-  const removeLetterDueto = () => {
-    if (modoComando) return;
-    if (dueto.status1 !== 'playing' && dueto.status2 !== 'playing') return;
-    setDueto(prev => ({ ...prev, currentGuess: prev.currentGuess.slice(0, -1) }));
-  };
-  const submitGuessDueto = async () => {
-    if (dueto.status1 !== 'playing' && dueto.status2 !== 'playing') return;
-    if (dueto.currentGuess.length !== 5) return;
-    // Verifica palavra para ambos os grids
-    const [res1, res2] = await Promise.all([
-      api.verificarPalavra(dueto.currentGuess),
-      api.verificarPalavra(dueto.currentGuess)
-    ]);
-    if (!res1.existe && !res2.existe) {
-      showNotification('Palavra não encontrada!');
-      return;
-    }
-    const newGuesses = [...dueto.guesses, dueto.currentGuess];
-    const isCorrect1 = dueto.currentGuess === dueto.word1;
-    const isCorrect2 = dueto.currentGuess === dueto.word2;
-    const isGameOver = newGuesses.length >= dueto.maxAttempts;
-    const newStatus1 = isCorrect1 ? 'won' : (isGameOver ? 'lost' : dueto.status1);
-    const newStatus2 = isCorrect2 ? 'won' : (isGameOver ? 'lost' : dueto.status2);
-    
-    // Adiciona delay se acertou alguma palavra
-    if (isCorrect1 || isCorrect2) {
-      await new Promise(resolve => setTimeout(resolve, 200));
-    }
-    
-    setDueto(prev => ({
-      ...prev,
-      guesses: newGuesses,
-      currentGuess: '',
-      status1: newStatus1,
-      status2: newStatus2,
-    }));
-  };
-  const restartDueto = () => iniciarDueto();
-
-  // Lógica de adicionar/remover letra e submit para Abracatetra
-  const addLetterTetra = (letter: string) => {
-    if (modoComando) return;
-    if (tetra.status.every(s => s !== 'playing')) return;
-    if (tetra.currentGuess.length >= 5) return;
-    setTetra(prev => ({ ...prev, currentGuess: prev.currentGuess + letter.toUpperCase() }));
-  };
-  const removeLetterTetra = () => {
-    if (modoComando) return;
-    if (tetra.status.every(s => s !== 'playing')) return;
-    setTetra(prev => ({ ...prev, currentGuess: prev.currentGuess.slice(0, -1) }));
-  };
-  const submitGuessTetra = async () => {
-    if (tetra.status.every(s => s !== 'playing')) return;
-    if (tetra.currentGuess.length !== 5) return;
-    // Verifica palavra para todos os grids
-    const results = await Promise.all(
-      tetra.words.map(word => api.verificarPalavra(tetra.currentGuess))
-    );
-    if (results.every(r => !r.existe)) {
-      showNotification('Palavra não encontrada!');
-      return;
-    }
-    const newGuesses = [...tetra.guesses, tetra.currentGuess];
-    const newStatus = tetra.words.map((word, i) => {
-      if (tetra.status[i] !== 'playing') return tetra.status[i];
-      if (tetra.currentGuess === word) return 'won';
-      if (newGuesses.length >= tetra.maxAttempts) return 'lost';
-      return 'playing';
-    });
-    
-    // Adiciona delay se acertou alguma palavra
-    if (newStatus.some(status => status === 'won')) {
-      await new Promise(resolve => setTimeout(resolve, 200));
-    }
-    
-    setTetra(prev => ({
-      ...prev,
-      guesses: newGuesses,
-      currentGuess: '',
-      status: newStatus,
-    }));
-  };
-  const restartTetra = () => iniciarTetra();
-
-  // Funções para estados das letras e teclado no Dueto
-  const getLetterStatesDueto = (guess: string, word: string) => {
-    const result: any[] = [];
-    const wordArray = word.split('');
-    const guessArray = guess.split('');
-    const wordLetterCount: { [key: string]: number } = {};
-    wordArray.forEach(letter => {
-      wordLetterCount[letter] = (wordLetterCount[letter] || 0) + 1;
-    });
-    guessArray.forEach((letter, index) => {
-      if (letter === wordArray[index]) {
-        result[index] = { letter, status: 'correct' };
-        wordLetterCount[letter]--;
-      } else {
-        result[index] = { letter, status: 'absent' };
-      }
-    });
-    guessArray.forEach((letter, index) => {
-      if (result[index].status === 'absent' && wordLetterCount[letter] > 0) {
-        result[index] = { letter, status: 'present' };
-        wordLetterCount[letter]--;
-      }
-    });
-    return result;
-  };
-
-  const getKeyboardStatesDueto = () => {
-    const keyStates: { [key: string]: 'correct' | 'present' | 'absent' | 'unused' } = {};
-    dueto.guesses.forEach(guess => {
-      const letterStates1 = getLetterStatesDueto(guess, dueto.word1);
-      const letterStates2 = getLetterStatesDueto(guess, dueto.word2);
-      [...letterStates1, ...letterStates2].forEach(({ letter, status }) => {
-        if (status === 'correct') {
-          keyStates[letter] = 'correct';
-        } else if (status === 'present' && keyStates[letter] !== 'correct') {
-          keyStates[letter] = 'present';
-        } else if (status === 'absent' && !keyStates[letter]) {
-          keyStates[letter] = 'absent';
-        }
-      });
-    });
-    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    return alphabet.split('').map(letter => ({
-      key: letter,
-      status: keyStates[letter] || 'unused'
-    }));
-  };
-
-  const getLetterStatesTetra = (guess: string, word: string) => {
-    const result: any[] = [];
-    const wordArray = word.split('');
-    const guessArray = guess.split('');
-    const wordLetterCount: { [key: string]: number } = {};
-    wordArray.forEach(letter => {
-      wordLetterCount[letter] = (wordLetterCount[letter] || 0) + 1;
-    });
-    guessArray.forEach((letter, index) => {
-      if (letter === wordArray[index]) {
-        result[index] = { letter, status: 'correct' };
-        wordLetterCount[letter]--;
-      } else {
-        result[index] = { letter, status: 'absent' };
-      }
-    });
-    guessArray.forEach((letter, index) => {
-      if (result[index].status === 'absent' && wordLetterCount[letter] > 0) {
-        result[index] = { letter, status: 'present' };
-        wordLetterCount[letter]--;
-      }
-    });
-    return result;
-  };
-
-  const getKeyboardStatesTetra = () => {
-    const keyStates: { [key: string]: 'correct' | 'present' | 'absent' | 'unused' } = {};
-    tetra.guesses.forEach(guess => {
-      tetra.words.forEach(word => {
-        const letterStates = getLetterStatesTetra(guess, word);
-        letterStates.forEach(({ letter, status }) => {
-          if (status === 'correct') {
-            keyStates[letter] = 'correct';
-          } else if (status === 'present' && keyStates[letter] !== 'correct') {
-            keyStates[letter] = 'present';
-          } else if (status === 'absent' && !keyStates[letter]) {
-            keyStates[letter] = 'absent';
-          }
-        });
-      });
-    });
-    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    return alphabet.split('').map(letter => ({
-      key: letter,
-      status: keyStates[letter] || 'unused'
-    }));
+  // Começar Tetra
+  const comecarTetra = async () => {
+    setShowTetraHelp(false);
+    setModo('abracatetra');
   };
 
   const voltarParaNormal = () => {
@@ -412,9 +232,9 @@ function App() {
       } else if (command === 'admin') {
         sairModoComando();
         if (modo === 'dueto') {
-          showNotification(`Respostas: ${dueto.word1}, ${dueto.word2}`);
+          showNotification(`Respostas: ${duetoState.word1}, ${duetoState.word2}`);
         } else if (modo === 'abracatetra') {
-          showNotification(`Respostas: ${tetra.words.join(', ')}`);
+          showNotification(`Respostas: ${tetraState.words.join(', ')}`);
         } else {
           showNotification(`Resposta: ${palavraCorreta}`);
         }
@@ -458,24 +278,6 @@ function App() {
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, [modoComando]);
-
-  const addLetterNormal = (letter: string) => {
-    if (modoComando) return;
-    if (modo === 'speedrun') {
-      addLetter(letter);
-    } else {
-      addLetter(letter);
-    }
-  };
-
-  const removeLetterNormal = () => {
-    if (modoComando) return;
-    if (modo === 'speedrun') {
-      removeLetter();
-    } else {
-      removeLetter();
-    }
-  };
 
   const [showMeaning, setShowMeaning] = useState(false);
 
@@ -608,7 +410,10 @@ function App() {
     }
   }, [gameState.guesses]);
 
-  if (loading || dueto.loading || tetra.loading) {
+  // Determina qual loading mostrar
+  const isLoading = loading || duetoState.loading || tetraState.loading;
+
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-[#1a1a1a] flex items-center justify-center">
         <div className="text-center space-y-4">
@@ -620,6 +425,50 @@ function App() {
       </div>
     );
   }
+
+  // Função para determinar qual função usar baseada no modo
+  const getCurrentAddLetter = () => {
+    switch (modo) {
+      case 'dueto': return addDuetoLetter;
+      case 'abracatetra': return addTetraLetter;
+      default: return addLetter;
+    }
+  };
+
+  const getCurrentRemoveLetter = () => {
+    switch (modo) {
+      case 'dueto': return removeDuetoLetter;
+      case 'abracatetra': return removeTetraLetter;
+      default: return removeLetter;
+    }
+  };
+
+  const getCurrentSubmitGuess = () => {
+    switch (modo) {
+      case 'dueto': return submitDuetoGuess;
+      case 'abracatetra': return submitTetraGuess;
+      default: return submitGuess;
+    }
+  };
+
+  const getCurrentKeyboardStates = () => {
+    switch (modo) {
+      case 'dueto': return getDuetoKeyboardStates();
+      case 'abracatetra': return getTetraKeyboardStates();
+      default: return getKeyboardStates();
+    }
+  };
+
+  const isGameDisabled = () => {
+    switch (modo) {
+      case 'dueto': 
+        return duetoState.status1 !== 'playing' && duetoState.status2 !== 'playing';
+      case 'abracatetra': 
+        return tetraState.status.every(s => s !== 'playing');
+      default: 
+        return gameState.gameStatus !== 'playing';
+    }
+  };
 
   return (
     <Routes>
@@ -654,64 +503,66 @@ function App() {
                 />
               </div>
             )}
-            <div className="w-full flex flex-col md:flex-row md:gap-8 items-center justify-center">
+            
+            <div className="w-full flex flex-col items-center justify-center">
               {modo === 'dueto' ? (
-                <>
-                  <GameGrid
-                    guesses={dueto.guesses}
-                    currentGuess={dueto.currentGuess.split('')}
+                <div className="flex flex-col md:flex-row gap-4 md:gap-8 items-center justify-center w-full">
+                  <DuetoGrid
+                    guesses={duetoState.guesses}
+                    currentGuess={duetoState.currentGuess}
                     wordLength={5}
                     maxAttempts={7}
-                    getLetterStates={g => getLetterStatesDueto(g, dueto.word1)}
-                    isCompleted={dueto.status1 !== 'playing'}
-                    selectedIndex={0}
-                    selectIndex={() => {}}
+                    getLetterStates={g => getDuetoLetterStates(g, duetoState.word1)}
+                    isCompleted={duetoState.status1 !== 'playing'}
+                    title="Palavra"
+                    gridNumber={1}
                   />
-                  <GameGrid
-                    guesses={dueto.guesses}
-                    currentGuess={dueto.currentGuess.split('')}
+                  <DuetoGrid
+                    guesses={duetoState.guesses}
+                    currentGuess={duetoState.currentGuess}
                     wordLength={5}
                     maxAttempts={7}
-                    getLetterStates={g => getLetterStatesDueto(g, dueto.word2)}
-                    isCompleted={dueto.status2 !== 'playing'}
-                    selectedIndex={0}
-                    selectIndex={() => {}}
+                    getLetterStates={g => getDuetoLetterStates(g, duetoState.word2)}
+                    isCompleted={duetoState.status2 !== 'playing'}
+                    title="Palavra"
+                    gridNumber={2}
                   />
-                </>
+                </div>
               ) : modo === 'abracatetra' ? (
-                <>
-                  {tetra.words.map((word, idx) => (
-                    <GameGrid
+                <div className="grid grid-cols-2 gap-2 sm:gap-4 md:gap-6 w-full max-w-4xl">
+                  {tetraState.words.map((word, idx) => (
+                    <TetraGrid
                       key={idx}
-                      guesses={tetra.guesses}
-                      currentGuess={tetra.currentGuess.split('')}
+                      guesses={tetraState.guesses}
+                      currentGuess={tetraState.currentGuess}
                       wordLength={5}
                       maxAttempts={9}
-                      getLetterStates={g => getLetterStatesTetra(g, word)}
-                      isCompleted={false}
-                      selectedIndex={0}
-                      selectIndex={() => {}}
+                      getLetterStates={g => getTetraLetterStates(g, word)}
+                      isCompleted={tetraState.status[idx] !== 'playing'}
+                      title="Palavra"
+                      gridNumber={idx + 1}
                     />
                   ))}
-                </>
+                </div>
               ) : (
-              <GameGrid
-                guesses={gameState.guesses}
-                currentGuess={gameState.currentGuess}
-                wordLength={wordLength}
-                maxAttempts={gameState.maxAttempts}
-                getLetterStates={getLetterStates}
-                isCompleted={false}
-                selectedIndex={selectedIndex}
-                selectIndex={selectIndex}
-                isSpeedRun={modo === 'speedrun'}
-                isSpeedRunActive={isSpeedRunActive}
-                onTimeUpdate={updateSpeedRunTime}
-                isLastAttempt={gameState.guesses.length === gameState.maxAttempts - 1 && gameState.gameStatus === 'playing'}
-                shouldExplode={shouldExplode}
-              />
+                <GameGrid
+                  guesses={gameState.guesses}
+                  currentGuess={gameState.currentGuess}
+                  wordLength={wordLength}
+                  maxAttempts={gameState.maxAttempts}
+                  getLetterStates={getLetterStates}
+                  isCompleted={false}
+                  selectedIndex={selectedIndex}
+                  selectIndex={selectIndex}
+                  isSpeedRun={modo === 'speedrun'}
+                  isSpeedRunActive={isSpeedRunActive}
+                  onTimeUpdate={updateSpeedRunTime}
+                  isLastAttempt={gameState.guesses.length === gameState.maxAttempts - 1 && gameState.gameStatus === 'playing'}
+                  shouldExplode={shouldExplode}
+                />
               )}
             </div>
+            
             {modo === 'normal' && gameState.gameStatus === 'playing' && (
               <Spellbook 
                 onCastRevealLetter={castRevealLetterSpell}
@@ -720,34 +571,33 @@ function App() {
                 spellUses={revealSpellUses}
               />
             )}
+            
             <Keyboard
-              keyboardStates={modo === 'dueto' ? getKeyboardStatesDueto() : modo === 'abracatetra' ? getKeyboardStatesTetra() : getKeyboardStates()}
-              onKeyPress={modo === 'dueto' ? addLetterDueto : modo === 'abracatetra' ? addLetterTetra : addLetterNormal}
-              onDelete={modo === 'dueto' ? removeLetterDueto : modo === 'abracatetra' ? removeLetterTetra : removeLetterNormal}
-              onEnter={modo === 'dueto' ? submitGuessDueto : modo === 'abracatetra' ? submitGuessTetra : submitGuess}
-              disabled={modo === 'dueto'
-                ? dueto.status1 !== 'playing' && dueto.status2 !== 'playing'
-                : modo === 'abracatetra'
-                  ? tetra.status.every(s => s !== 'playing')
-                  : gameState.gameStatus !== 'playing'}
+              keyboardStates={getCurrentKeyboardStates()}
+              onKeyPress={getCurrentAddLetter()}
+              onDelete={getCurrentRemoveLetter()}
+              onEnter={getCurrentSubmitGuess()}
+              disabled={isGameDisabled()}
             />
-            {modo === 'dueto' && (dueto.status1 !== 'playing' && dueto.status2 !== 'playing') && (
+
+            {/* Modal de vitória/derrota para modo dueto */}
+            {modo === 'dueto' && (duetoState.status1 !== 'playing' && duetoState.status2 !== 'playing') && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
                 <div className="p-4 sm:p-6 bg-[#2d2d2d] rounded-lg border border-[#3d3d3d] shadow-xl min-w-[280px] sm:min-w-[320px] max-w-full flex flex-col items-center">
                   <div className="space-y-2 text-center">
                     <h3 className="text-xl sm:text-2xl font-bold text-[#8b5cf6] font-mono flex items-center justify-center gap-2">
-                      {dueto.guesses.length === dueto.maxAttempts ? (
-                        <span className="text-2xl sm:text-3xl">Ufa!</span>
-                      ) : (
-                        <>Abracadupla finalizado!</>
-                      )}
+                      Abracadupla finalizado!
                     </h3>
-                    <p className="text-sm sm:text-base text-[#d0d0d0] font-mono">
-                      Palavra 1: <span className="font-bold text-[#4ade80]">{dueto.word1}</span> - {dueto.status1 === 'won' ? 'Acertou!' : 'Errou!'}<br />
-                      Palavra 2: <span className="font-bold text-[#4ade80]">{dueto.word2}</span> - {dueto.status2 === 'won' ? 'Acertou!' : 'Errou!'}
+                    <div className="space-y-1">
+                      <p className="text-sm sm:text-base text-[#d0d0d0] font-mono">
+                        Palavra 1: <span className="font-bold text-[#4ade80]">{duetoState.word1}</span> - {duetoState.status1 === 'won' ? '✅ Acertou!' : '❌ Errou!'}
+                      </p>
+                      <p className="text-sm sm:text-base text-[#d0d0d0] font-mono">
+                        Palavra 2: <span className="font-bold text-[#4ade80]">{duetoState.word2}</span> - {duetoState.status2 === 'won' ? '✅ Acertou!' : '❌ Errou!'}
                       </p>
                     </div>
-                  <div className="flex flex-col gap-2 w-full mt-2">
+                  </div>
+                  <div className="flex flex-col gap-2 w-full mt-4">
                     <button
                       onClick={restartDueto}
                       className="w-full py-2 sm:py-3 px-4 sm:px-5 rounded-lg bg-[#8b5cf6] text-white font-bold text-sm sm:text-base hover:bg-[#6d28d9] transition-all duration-200 flex items-center justify-center gap-2"
@@ -755,37 +605,54 @@ function App() {
                       <Play size={16} className="sm:w-[18px] sm:h-[18px]" />
                       Jogar Novamente
                     </button>
+                    <button
+                      onClick={voltarParaNormal}
+                      className="w-full py-2 sm:py-3 px-4 sm:px-5 rounded-lg bg-[#2d2d2d] text-[#d0d0d0] font-bold text-sm sm:text-base hover:bg-[#3d3d3d] border border-[#3d3d3d] hover:border-[#8b5cf6] transition-all duration-200 flex items-center justify-center gap-2"
+                    >
+                      <Home size={16} className="sm:w-[18px] sm:h-[18px]" />
+                      Modo Normal
+                    </button>
                   </div>
                 </div>
               </div>
             )}
-            {modo === 'abracatetra' && tetra.status.every(s => s !== 'playing') && (
+
+            {/* Modal de vitória/derrota para modo abracatetra */}
+            {modo === 'abracatetra' && tetraState.status.every(s => s !== 'playing') && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
                 <div className="p-4 sm:p-6 bg-[#2d2d2d] rounded-lg border border-[#3d3d3d] shadow-xl min-w-[280px] sm:min-w-[320px] max-w-full flex flex-col items-center">
                   <div className="space-y-2 text-center">
                     <h3 className="text-xl sm:text-2xl font-bold text-[#8b5cf6] font-mono flex items-center justify-center gap-2">
-                      {tetra.guesses.length === tetra.maxAttempts ? (
-                        <span className="text-2xl sm:text-3xl">Ufa!</span>
-                      ) : (
-                        <>Abracatetra finalizado!</>
-                      )}
+                      Abracatetra finalizado!
                     </h3>
-                    {tetra.words.map((word, idx) => (
-                      <p key={idx} className="text-sm sm:text-base text-[#d0d0d0] font-mono">
-                        Palavra {idx + 1}: <span className="font-bold text-[#4ade80]">{word}</span> - {tetra.status[idx] === 'won' ? 'Acertou!' : 'Errou!'}
-                      </p>
-                    ))}
+                    <div className="space-y-1">
+                      {tetraState.words.map((word, idx) => (
+                        <p key={idx} className="text-sm sm:text-base text-[#d0d0d0] font-mono">
+                          Palavra {idx + 1}: <span className="font-bold text-[#4ade80]">{word}</span> - {tetraState.status[idx] === 'won' ? '✅ Acertou!' : '❌ Errou!'}
+                        </p>
+                      ))}
+                    </div>
                   </div>
-                  <button
-                    onClick={restartTetra}
-                    className="mt-4 w-full py-2 sm:py-3 px-4 sm:px-5 rounded-lg bg-[#8b5cf6] text-white font-bold text-sm sm:text-base hover:bg-[#6d28d9] transition-all duration-200 flex items-center justify-center gap-2"
-                  >
-                    <Play size={16} className="sm:w-[18px] sm:h-[18px]" />
-                    Jogar Novamente
-                  </button>
+                  <div className="flex flex-col gap-2 w-full mt-4">
+                    <button
+                      onClick={restartTetra}
+                      className="w-full py-2 sm:py-3 px-4 sm:px-5 rounded-lg bg-[#8b5cf6] text-white font-bold text-sm sm:text-base hover:bg-[#6d28d9] transition-all duration-200 flex items-center justify-center gap-2"
+                    >
+                      <Play size={16} className="sm:w-[18px] sm:h-[18px]" />
+                      Jogar Novamente
+                    </button>
+                    <button
+                      onClick={voltarParaNormal}
+                      className="w-full py-2 sm:py-3 px-4 sm:px-5 rounded-lg bg-[#2d2d2d] text-[#d0d0d0] font-bold text-sm sm:text-base hover:bg-[#3d3d3d] border border-[#3d3d3d] hover:border-[#8b5cf6] transition-all duration-200 flex items-center justify-center gap-2"
+                    >
+                      <Home size={16} className="sm:w-[18px] sm:h-[18px]" />
+                      Modo Normal
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
+
             {/* Modal de vitória/derrota para modo normal e speedrun */}
             {(modo === 'normal' || modo === 'speedrun') && gameState.gameStatus !== 'playing' && showVictoryModal && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
@@ -872,6 +739,7 @@ function App() {
                 </div>
               </div>
             )}
+
             {modoComando && (
               <>
                 {/* Overlay para capturar foco e impedir interação */}
@@ -897,6 +765,7 @@ function App() {
                 </div>
               </>
             )}
+            
             {/* Modal de significado */}
             {showMeaning && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
@@ -921,6 +790,7 @@ function App() {
                 </div>
               </div>
             )}
+            
             <SpeedRunHelpModal
               isOpen={showSpeedRunHelp}
               onClose={() => setShowSpeedRunHelp(false)}
@@ -930,6 +800,27 @@ function App() {
                 voltarParaNormal();
               }}
             />
+            
+            <DuetoHelpModal
+              isOpen={showDuetoHelp}
+              onClose={() => setShowDuetoHelp(false)}
+              onStart={comecarDueto}
+              onNormalMode={() => {
+                setShowDuetoHelp(false);
+                voltarParaNormal();
+              }}
+            />
+            
+            <TetraHelpModal
+              isOpen={showTetraHelp}
+              onClose={() => setShowTetraHelp(false)}
+              onStart={comecarTetra}
+              onNormalMode={() => {
+                setShowTetraHelp(false);
+                voltarParaNormal();
+              }}
+            />
+            
             <StatsModal
               isOpen={showStats}
               onClose={() => setShowStats(false)}
