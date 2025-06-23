@@ -102,26 +102,34 @@ export const calculateXpGained = (guesses: number): number => {
 };
 
 // Função para aplicar XP e gerenciar subida de nível
-const applyXpAndLevelUp = (stats: GameStats, guessCount: number): { newStats: GameStats; leveledUp: boolean, xpGained: number } => {
-  const xpGained = calculateXpGained(guessCount);
-  const newStats = { ...stats, xp: stats.xp + xpGained };
+export const applyXp = (stats: GameStats, xpToAdd: number): { newStats: GameStats; leveledUp: boolean } => {
+  const newStats = { ...stats, xp: stats.xp + xpToAdd };
 
   const oldLevel = newStats.level;
   let xpForNext = getXpForNextLevel(newStats.level);
 
+  // Loop para subir de nível
   while (newStats.xp >= xpForNext) {
     newStats.level++;
     newStats.xp -= xpForNext;
     xpForNext = getXpForNextLevel(newStats.level);
   }
 
-  newStats.rank = getRankForLevel(newStats.level);
   const leveledUp = newStats.level > oldLevel;
-
   if (leveledUp) {
+    // Recompensa por subir de nível
     newStats.mana = Math.min(newStats.mana + 50, 100);
+    // Atualiza o rank do jogador
+    newStats.rank = getRankForLevel(newStats.level);
   }
 
+  return { newStats, leveledUp };
+};
+
+// Função para aplicar XP de vitória e gerenciar subida de nível
+const applyXpAndLevelUp = (stats: GameStats, guessCount: number): { newStats: GameStats; leveledUp: boolean, xpGained: number } => {
+  const xpGained = calculateXpGained(guessCount);
+  const { newStats, leveledUp } = applyXp(stats, xpGained);
   return { newStats, leveledUp, xpGained };
 };
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import { GameStats, getXpForNextLevel } from '../utils/stats';
-import { BarChart, Star } from 'lucide-react';
+import { RankIcon } from './RankIcon';
 
 // Interface que define as propriedades que este componente recebe
 interface PlayerStatsDisplayProps {
@@ -23,9 +23,9 @@ export const PlayerStatsDisplay: React.FC<PlayerStatsDisplayProps> = ({ stats })
     <div className="flex items-center gap-2 sm:gap-4 text-[#d0d0d0] font-mono text-xs sm:text-sm" data-tour="player-stats-display">
       
       {/* Seção do nível/rank do jogador */}
-      <div className="flex items-center gap-1 sm:gap-2" title={`Nível ${level}`} data-tour="player-rank">
-        {/* Ícone de estrela dourada */}
-        <Star size={14} className="sm:w-4 sm:h-4 text-[#facc15]" />
+      <div className="flex items-center gap-1 sm:gap-2" title={`Nível ${level} - ${rank}`} data-tour="player-rank">
+        {/* Ícone dinâmico do rank */}
+        <RankIcon rank={rank} />
         
         {/* Texto do rank (ex: "Aprendiz de Letras") - visível apenas em telas grandes */}
         <span className="hidden sm:inline flex-shrink-0">{rank}</span>

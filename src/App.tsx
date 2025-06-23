@@ -29,6 +29,8 @@ import {
   updateLetterFrequency,
   updateWeeklyEvolution,
   updateStatsOnWordWin,
+  applyXp,
+  getRankForLevel,
 } from './utils/stats';
 import { getMascotMessage, MessageType } from './utils/mascotMessages';
 import { Mascot } from './components/Mascot';
@@ -325,6 +327,36 @@ function App() {
             return newStats;
         });
         showNotification('🔮 Mana restaurada para o máximo!');
+      } else if (command.startsWith('xpadmin')) {
+        sairModoComando();
+        const parts = command.split(' ');
+        const xpAmount = parts.length > 1 && !isNaN(parseInt(parts[1])) ? parseInt(parts[1]) : 50;
+
+        setStats(prevStats => {
+            const { newStats, leveledUp } = applyXp(prevStats, xpAmount);
+            if (leveledUp) {
+              setTimeout(() => {
+                  showNotification(`🎉 Nível ${newStats.level}! ${newStats.rank}! +50 de Mana!`);
+                  triggerMascotMessage('levelUp', newStats.rank);
+              }, 500);
+            }
+            saveStats(newStats);
+            return newStats;
+        });
+        showNotification(`⭐ +${xpAmount} de XP adicionados!`);
+      } else if (command === 'resetxp') {
+        sairModoComando();
+        setStats(prevStats => {
+          const newStats = { 
+            ...prevStats, 
+            xp: 0, 
+            level: 1, 
+            rank: getRankForLevel(1) 
+          };
+          saveStats(newStats);
+          return newStats;
+        });
+        showNotification('🔄 XP e Nível foram resetados!');
       }
     } else if (e.key === 'Escape') {
       sairModoComando();
