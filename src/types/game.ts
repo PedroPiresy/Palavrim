@@ -15,7 +15,7 @@ export interface LetterState {
 
 export interface KeyboardKey {
   key: string;
-  status: 'correct' | 'present' | 'absent' | 'unused';
+  status: 'correct' | 'present' | 'absent' | 'unused' | Array<'correct' | 'present' | 'absent' | 'unused'>;
 }
 
 export interface ApiResponse {

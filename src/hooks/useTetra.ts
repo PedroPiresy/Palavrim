@@ -99,28 +99,22 @@ export const useTetra = (
   }, []);
 
   const getKeyboardStates = useCallback((): KeyboardKey[] => {
-    const keyStates: { [key: string]: 'correct' | 'present' | 'absent' | 'unused' } = {};
-    
-    tetraState.guesses.forEach(guess => {
-      tetraState.words.forEach(word => {
-        const letterStates = getLetterStates(guess, word);
-        letterStates.forEach(({ letter, status }) => {
-          if (status === 'correct') {
-            keyStates[letter] = 'correct';
-          } else if (status === 'present' && keyStates[letter] !== 'correct') {
-            keyStates[letter] = 'present';
-          } else if (status === 'absent' && !keyStates[letter]) {
-            keyStates[letter] = 'absent';
-          }
-        });
-      });
-    });
-    
     const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    return alphabet.split('').map(letter => ({
-      key: letter,
-      status: keyStates[letter] || 'unused'
-    }));
+    return alphabet.split('').map(letter => {
+      const statusArr = tetraState.words.map(word => {
+        return tetraState.guesses.some(guess => getLetterStates(guess, word).some(ls => ls.letter === letter && ls.status === 'correct'))
+          ? 'correct'
+          : tetraState.guesses.some(guess => getLetterStates(guess, word).some(ls => ls.letter === letter && ls.status === 'present'))
+          ? 'present'
+          : tetraState.guesses.some(guess => getLetterStates(guess, word).some(ls => ls.letter === letter && ls.status === 'absent'))
+          ? 'absent'
+          : 'unused';
+      });
+      return {
+        key: letter,
+        status: statusArr
+      };
+    });
   }, [tetraState.guesses, tetraState.words, getLetterStates]);
 
   const selectIndex = (index: number) => {

@@ -100,28 +100,28 @@ export const useDueto = (
   }, []);
 
   const getKeyboardStates = useCallback((): KeyboardKey[] => {
-    const keyStates: { [key: string]: 'correct' | 'present' | 'absent' | 'unused' } = {};
-    
-    duetoState.guesses.forEach(guess => {
-      const letterStates1 = getLetterStates(guess, duetoState.word1);
-      const letterStates2 = getLetterStates(guess, duetoState.word2);
-      
-      [...letterStates1, ...letterStates2].forEach(({ letter, status }) => {
-        if (status === 'correct') {
-          keyStates[letter] = 'correct';
-        } else if (status === 'present' && keyStates[letter] !== 'correct') {
-          keyStates[letter] = 'present';
-        } else if (status === 'absent' && !keyStates[letter]) {
-          keyStates[letter] = 'absent';
-        }
-      });
-    });
-    
     const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    return alphabet.split('').map(letter => ({
-      key: letter,
-      status: keyStates[letter] || 'unused'
-    }));
+    return alphabet.split('').map(letter => {
+      // Para cada palavra, calcula o status da letra
+      const status1 = duetoState.guesses.some(guess => getLetterStates(guess, duetoState.word1).some(ls => ls.letter === letter && ls.status === 'correct'))
+        ? 'correct'
+        : duetoState.guesses.some(guess => getLetterStates(guess, duetoState.word1).some(ls => ls.letter === letter && ls.status === 'present'))
+        ? 'present'
+        : duetoState.guesses.some(guess => getLetterStates(guess, duetoState.word1).some(ls => ls.letter === letter && ls.status === 'absent'))
+        ? 'absent'
+        : 'unused';
+      const status2 = duetoState.guesses.some(guess => getLetterStates(guess, duetoState.word2).some(ls => ls.letter === letter && ls.status === 'correct'))
+        ? 'correct'
+        : duetoState.guesses.some(guess => getLetterStates(guess, duetoState.word2).some(ls => ls.letter === letter && ls.status === 'present'))
+        ? 'present'
+        : duetoState.guesses.some(guess => getLetterStates(guess, duetoState.word2).some(ls => ls.letter === letter && ls.status === 'absent'))
+        ? 'absent'
+        : 'unused';
+      return {
+        key: letter,
+        status: [status1, status2]
+      };
+    });
   }, [duetoState.guesses, duetoState.word1, duetoState.word2, getLetterStates]);
 
   const selectIndex = (index: number) => {
