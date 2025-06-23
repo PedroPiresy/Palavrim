@@ -49,6 +49,7 @@ function App() {
   const [isCastingSpell, setIsCastingSpell] = useState(false);
   const [shouldExplode, setShouldExplode] = useState(false);
   const [showVictoryModal, setShowVictoryModal] = useState(false);
+  const [wordToSearch, setWordToSearch] = useState('');
 
   const triggerMascotMessage = (type: MessageType, rank?: string) => {
     setTimeout(() => {
@@ -125,6 +126,10 @@ function App() {
   const [revealSpellUses, setRevealSpellUses] = useState(0);
   const [countdown, setCountdown] = useState<number | null>(null);
   const { setIsOpen: setTourOpen } = useTour();
+
+  useEffect(() => {
+    restartGame();
+  }, []);
 
   useEffect(() => {
     const today = new Date().toISOString().split('T')[0];
@@ -206,6 +211,7 @@ function App() {
   const comecarDueto = async () => {
     setShowDuetoHelp(false);
     setModo('dueto');
+    await restartDueto();
   };
 
   // Iniciar modo Abracatetra
@@ -217,6 +223,7 @@ function App() {
   const comecarTetra = async () => {
     setShowTetraHelp(false);
     setModo('abracatetra');
+    await restartTetra();
   };
 
   const voltarParaNormal = () => {
@@ -300,6 +307,7 @@ function App() {
   const [showMeaning, setShowMeaning] = useState(false);
 
   const fetchMeaning = async (word: string) => {
+    setWordToSearch(word);
     setShowMeaning(true);
   };
 
@@ -617,12 +625,13 @@ function App() {
                     </h3>
                     <div className="space-y-1">
                       <p className="text-sm sm:text-base text-[#d0d0d0] font-mono">
-                        Palavra 1: <span className="font-bold text-[#4ade80]">{duetoState.word1}</span> - {duetoState.status1 === 'won' ? '✅ Acertou!' : '❌ Errou!'}
+                        Palavra 1: <span onClick={() => fetchMeaning(duetoState.word1)} className="font-bold text-[#4ade80] cursor-pointer hover:underline">{duetoState.word1}</span> - {duetoState.status1 === 'won' ? '✅ Acertou!' : '❌ Errou!'}
                       </p>
                       <p className="text-sm sm:text-base text-[#d0d0d0] font-mono">
-                        Palavra 2: <span className="font-bold text-[#4ade80]">{duetoState.word2}</span> - {duetoState.status2 === 'won' ? '✅ Acertou!' : '❌ Errou!'}
+                        Palavra 2: <span onClick={() => fetchMeaning(duetoState.word2)} className="font-bold text-[#4ade80] cursor-pointer hover:underline">{duetoState.word2}</span> - {duetoState.status2 === 'won' ? '✅ Acertou!' : '❌ Errou!'}
                       </p>
                     </div>
+                    <p className="text-xs text-slate-400 font-mono pt-2">(Clique na palavra para ver o significado)</p>
                   </div>
                   <div className="flex flex-col gap-2 w-full mt-4">
                     <button
@@ -655,10 +664,11 @@ function App() {
                     <div className="space-y-1">
                       {tetraState.words.map((word, idx) => (
                         <p key={idx} className="text-sm sm:text-base text-[#d0d0d0] font-mono">
-                          Palavra {idx + 1}: <span className="font-bold text-[#4ade80]">{word}</span> - {tetraState.status[idx] === 'won' ? '✅ Acertou!' : '❌ Errou!'}
+                          Palavra {idx + 1}: <span onClick={() => fetchMeaning(word)} className="font-bold text-[#4ade80] cursor-pointer hover:underline">{word}</span> - {tetraState.status[idx] === 'won' ? '✅ Acertou!' : '❌ Errou!'}
                         </p>
                       ))}
                     </div>
+                    <p className="text-xs text-slate-400 font-mono pt-2">(Clique na palavra para ver o significado)</p>
                   </div>
                   <div className="flex flex-col gap-2 w-full mt-4">
                     <button
@@ -798,7 +808,7 @@ function App() {
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
                 <div className="bg-[#1a1a1a] border border-[#8b5cf6] rounded-lg p-4 sm:p-6 max-w-4xl w-full h-[80vh] flex flex-col">
                   <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg sm:text-xl font-bold text-[#8b5cf6] font-mono">Significado de "{palavraCorreta}"</h2>
+                    <h2 className="text-lg sm:text-xl font-bold text-[#8b5cf6] font-mono">Significado de "{wordToSearch}"</h2>
                     <button
                       onClick={() => setShowMeaning(false)}
                       className="p-2 rounded bg-[#2d2d2d] text-[#d0d0d0] hover:bg-[#3d3d3d] border border-[#3d3d3d] hover:border-[#8b5cf6] transition-colors font-mono"
@@ -809,9 +819,9 @@ function App() {
                   
                   <div className="flex-1">
                     <iframe
-                      src={`https://pt.wiktionary.org/wiki/${palavraCorreta.toLowerCase()}`}
+                      src={`https://pt.wiktionary.org/wiki/${wordToSearch.toLowerCase()}`}
                       className="w-full h-full border border-[#3d3d3d] rounded"
-                      title={`Significado de ${palavraCorreta}`}
+                      title={`Significado de ${wordToSearch}`}
                     />
                   </div>
                 </div>

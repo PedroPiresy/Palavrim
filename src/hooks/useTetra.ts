@@ -21,7 +21,7 @@ export const useTetra = (
     currentGuess: '',
     status: ['playing', 'playing', 'playing', 'playing'],
     maxAttempts: 9,
-    loading: true,
+    loading: false,
   });
 
   const notify = (msg: string) => {
@@ -61,10 +61,6 @@ export const useTetra = (
       setTetraState(prev => ({ ...prev, loading: false }));
     }
   };
-
-  useEffect(() => {
-    initializeTetra();
-  }, []);
 
   const getLetterStates = useCallback((guess: string, word: string): LetterState[] => {
     if (!word) return [];

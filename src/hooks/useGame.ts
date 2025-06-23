@@ -24,11 +24,6 @@ export const useGame = (
   const [speedRunTime, setSpeedRunTime] = useState(0);
   const [isSpeedRunActive, setIsSpeedRunActive] = useState(false);
 
-  // Inicializar jogo
-  useEffect(() => {
-    initializeGame();
-  }, []);
-
   const notify = (msg: string) => {
     if (showNotification) showNotification(msg);
   };

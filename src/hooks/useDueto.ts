@@ -25,7 +25,7 @@ export const useDueto = (
     status1: 'playing',
     status2: 'playing',
     maxAttempts: 7,
-    loading: true,
+    loading: false,
   });
 
   const notify = (msg: string) => {
@@ -62,10 +62,6 @@ export const useDueto = (
       setDuetoState(prev => ({ ...prev, loading: false }));
     }
   };
-
-  useEffect(() => {
-    initializeDueto();
-  }, []);
 
   const getLetterStates = useCallback((guess: string, word: string): LetterState[] => {
     if (!word) return [];
