@@ -5,7 +5,7 @@ import { api } from '../utils/api';
 export interface TetraState {
   words: [string, string, string, string];
   guesses: string[];
-  currentGuess: string;
+  currentGuess: string[];
   status: ['playing' | 'won' | 'lost', 'playing' | 'won' | 'lost', 'playing' | 'won' | 'lost', 'playing' | 'won' | 'lost'];
   maxAttempts: number;
   loading: boolean;
@@ -18,11 +18,14 @@ export const useTetra = (
   const [tetraState, setTetraState] = useState<TetraState>({
     words: ['', '', '', ''],
     guesses: [],
-    currentGuess: '',
+    currentGuess: Array(5).fill(''),
     status: ['playing', 'playing', 'playing', 'playing'],
     maxAttempts: 9,
     loading: false,
   });
+
+  // Estado para controlar a posição selecionada no grid
+  const [selectedIndex, setSelectedIndex] = useState(0);
 
   const notify = (msg: string) => {
     if (showNotification) showNotification(msg);
@@ -50,11 +53,14 @@ export const useTetra = (
       setTetraState({
         words: finalWords,
         guesses: [],
-        currentGuess: '',
+        currentGuess: Array(5).fill(''),
         status: ['playing', 'playing', 'playing', 'playing'],
         maxAttempts: 9,
         loading: false,
       });
+
+      // Reset da posição selecionada
+      setSelectedIndex(0);
 
       // Dispara evento de início do jogo
       onGameEvent?.('gameStarted');
@@ -122,53 +128,74 @@ export const useTetra = (
 
   const addLetter = (letter: string) => {
     if (tetraState.status.every(s => s !== 'playing')) return;
-    if (tetraState.currentGuess.length >= 5) return;
+    if (tetraState.currentGuess[selectedIndex] !== '') return; // Não sobrescreve se já tem letra
+    
+    let guessArr = [...tetraState.currentGuess];
+    guessArr[selectedIndex] = letter.toUpperCase();
     
     setTetraState(prev => ({
       ...prev,
-      currentGuess: prev.currentGuess + letter.toUpperCase()
+      currentGuess: guessArr
     }));
+    
+    // Move para a próxima posição
+    setSelectedIndex(idx => Math.min(idx + 1, 4));
   };
 
   const removeLetter = () => {
     if (tetraState.status.every(s => s !== 'playing')) return;
     
+    let guessArr = [...tetraState.currentGuess];
+    guessArr[selectedIndex] = '';
+    
     setTetraState(prev => ({
       ...prev,
-      currentGuess: prev.currentGuess.slice(0, -1)
+      currentGuess: guessArr
     }));
+    
+    // Move para a posição anterior
+    setSelectedIndex(idx => Math.max(idx - 1, 0));
+  };
+
+  const selectIndex = (index: number) => {
+    setSelectedIndex(Math.max(0, Math.min(index, 4)));
   };
 
   const submitGuess = async () => {
     if (tetraState.status.every(s => s !== 'playing')) return;
-    if (tetraState.currentGuess.length !== 5) return;
+    const guessString = tetraState.currentGuess.join('');
+    
+    if (guessString.length !== 5 || tetraState.currentGuess.includes('')) {
+      notify('Palavra deve ter 5 letras!');
+      return;
+    }
 
-    if (tetraState.guesses.includes(tetraState.currentGuess)) {
+    if (tetraState.guesses.includes(guessString)) {
       notify('Você já tentou esta palavra!');
       onGameEvent?.('duplicateGuess');
       return;
     }
 
     try {
-      const resultado = await api.verificarPalavra(tetraState.currentGuess);
+      const resultado = await api.verificarPalavra(guessString);
       if (!resultado.existe) {
         notify('Palavra não encontrada!');
         onGameEvent?.('invalidWord');
         return;
       }
 
-      const newGuesses = [...tetraState.guesses, tetraState.currentGuess];
+      const newGuesses = [...tetraState.guesses, guessString];
       const isGameOver = newGuesses.length >= tetraState.maxAttempts;
       
       // Verifica se o palpite não acertou nenhuma letra em nenhuma das palavras
       const isAllGray = tetraState.words.every(word => {
-        const letterStates = getLetterStates(tetraState.currentGuess, word);
+        const letterStates = getLetterStates(guessString, word);
         return letterStates.every(state => state.status === 'absent');
       });
       
       const newStatus = tetraState.words.map((word, i) => {
         if (tetraState.status[i] !== 'playing') return tetraState.status[i];
-        if (tetraState.currentGuess === word) return 'won';
+        if (guessString === word) return 'won';
         if (isGameOver) return 'lost';
         return 'playing';
       }) as TetraState['status'];
@@ -180,9 +207,12 @@ export const useTetra = (
       setTetraState(prev => ({
         ...prev,
         guesses: newGuesses,
-        currentGuess: '',
+        currentGuess: Array(5).fill(''),
         status: newStatus,
       }));
+
+      // Reset da posição selecionada
+      setSelectedIndex(0);
 
       // Eventos para palpites ruins
       if (isAllGray) {
@@ -198,45 +228,43 @@ export const useTetra = (
         onGameEvent?.('lastAttempt');
       }
 
-      // Notificações baseadas no resultado
-      const gameIsWon = correctWords === 4;
-
-      if (gameIsWon) {
-        notify('🎉 Incrível! Você acertou todas as quatro palavras!');
+      // Eventos de progresso
+      if (correctWords === 4) {
         onGameEvent?.('gameWon');
       } else if (newCorrectWords > 0) {
-        if (newCorrectWords === 1) {
-          notify(`🎉 ${correctWords}ª palavra correta!`);
-        } else {
-          notify(`🎉 ${newCorrectWords} palavras corretas de uma vez!`);
-        }
         onGameEvent?.('partialWin');
       } else if (isGameOver) {
-        notify(`😔 Fim de jogo! Palavras: ${tetraState.words.join(', ')}`);
         onGameEvent?.('gameLost');
       } else {
-        // Progresso geral
         onGameEvent?.('progress');
       }
 
-      onGameEvent?.('guessSubmitted', { correctWords: newCorrectWords, isGameOver });
     } catch (error) {
-      console.error('Erro ao submeter palpite:', error);
+      console.error('Erro ao verificar palavra:', error);
       notify('Erro ao verificar palavra.');
     }
   };
 
   const restartTetra = () => {
-    initializeTetra();
+    setTetraState(prev => ({
+      ...prev,
+      guesses: [],
+      currentGuess: Array(5).fill(''),
+      status: ['playing', 'playing', 'playing', 'playing'],
+    }));
+    setSelectedIndex(0);
   };
 
   return {
     tetraState,
+    initializeTetra,
     getLetterStates,
     getKeyboardStates,
     addLetter,
     removeLetter,
     submitGuess,
     restartTetra,
+    selectedIndex,
+    selectIndex,
   };
 };
