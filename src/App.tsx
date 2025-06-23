@@ -684,6 +684,7 @@ function App() {
                     gridNumber={1}
                     selectedIndex={duetoState.selectedIndex}
                     selectIndex={selectDuetoIndex}
+                    isLastAttempt={duetoState.guesses.length === 6 && duetoState.status1 === 'playing'}
                   />
                   <DuetoGrid
                     guesses={duetoState.guesses}
@@ -697,6 +698,7 @@ function App() {
                     gridNumber={2}
                     selectedIndex={duetoState.selectedIndex}
                     selectIndex={selectDuetoIndex}
+                    isLastAttempt={duetoState.guesses.length === 6 && duetoState.status2 === 'playing'}
                   />
                 </div>
               ) : modo === 'abracatetra' ? (
@@ -715,6 +717,7 @@ function App() {
                       gridNumber={idx + 1}
                       selectedIndex={tetraState.selectedIndex}
                       selectIndex={selectTetraIndex}
+                      isLastAttempt={tetraState.guesses.length === 8 && tetraState.status[idx] === 'playing'}
                     />
                   ))}
                 </div>

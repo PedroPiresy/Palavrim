@@ -13,6 +13,7 @@ interface TetraGridProps {
   gridNumber: number;
   selectedIndex: number;
   selectIndex: (index: number) => void;
+  isLastAttempt?: boolean;
 }
 
 export const TetraGrid: React.FC<TetraGridProps> = ({
@@ -27,6 +28,7 @@ export const TetraGrid: React.FC<TetraGridProps> = ({
   gridNumber,
   selectedIndex,
   selectIndex,
+  isLastAttempt = false,
 }) => {
   const containerRef = React.useRef<HTMLDivElement>(null);
 
@@ -123,7 +125,12 @@ export const TetraGrid: React.FC<TetraGridProps> = ({
           const rowData = getRowData(rowIndex);
           const isCurrentRow = rowIndex === guesses.length && !isCompleted;
           return (
-            <div key={rowIndex} className="flex gap-1 justify-center">
+            <div key={rowIndex} className="relative flex gap-1 justify-center items-center">
+              {isLastAttempt && isCurrentRow && (
+                <div className="absolute left-[-32px] sm:left-[-40px] flex items-center justify-center animate-pulse" style={{height: '100%'}}>
+                  <span className="text-2xl sm:text-3xl text-red-500">💀</span>
+                </div>
+              )}
               {rowData.map((cell, cellIndex) => {
                 const isSelected = isCurrentRow && cellIndex === selectedIndex;
                 return (
