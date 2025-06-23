@@ -33,6 +33,7 @@ import { getMascotMessage, MessageType } from './utils/mascotMessages';
 import { Mascot } from './components/Mascot';
 import { useTour } from '@reactour/tour';
 import { AboutModal } from './components/AboutModal';
+import { Countdown } from './components/Countdown';
 
 function App() {
   const [notification, setNotification] = useState<string>('');
@@ -76,6 +77,7 @@ function App() {
     selectedIndex,
     selectIndex,
     startSpeedRun,
+    activateSpeedRunTimer,
     updateSpeedRunTime,
     isSpeedRunActive,
     speedRunTime,
@@ -121,6 +123,7 @@ function App() {
   const [stats, setStats] = useState<GameStats>(getInitialStats());
   const [modo, setModo] = useState<'normal' | 'dueto' | 'abracatetra' | 'speedrun'>('normal');
   const [revealSpellUses, setRevealSpellUses] = useState(0);
+  const [countdown, setCountdown] = useState<number | null>(null);
   const { setIsOpen: setTourOpen } = useTour();
 
   useEffect(() => {
@@ -148,6 +151,20 @@ function App() {
 
     triggerMascotMessage('welcome');
   }, []);
+
+  useEffect(() => {
+    if (countdown === null) return;
+
+    if (countdown > 0) {
+      const timerId = setTimeout(() => {
+        setCountdown(c => (c ? c - 1 : null));
+      }, 1000);
+      return () => clearTimeout(timerId);
+    } else if (countdown === 0) {
+      activateSpeedRunTimer();
+      setCountdown(null);
+    }
+  }, [countdown, activateSpeedRunTimer]);
 
   // Reset logic for new games - reseta estados quando um novo jogo começa
   useEffect(() => {
@@ -177,6 +194,7 @@ function App() {
     setShowSpeedRunHelp(false);
     setModo('speedrun');
     await startSpeedRun();
+    setCountdown(3);
   };
 
   // Iniciar modo Dueto
@@ -466,6 +484,9 @@ function App() {
       case 'abracatetra': 
         return tetraState.status.every(s => s !== 'playing');
       default: 
+        if (modo === 'speedrun' && countdown !== null) {
+          return true; // Bloqueia durante a contagem regressiva
+        }
         return gameState.gameStatus !== 'playing';
     }
   };
@@ -491,6 +512,8 @@ function App() {
             isVimMode={modoComando}
             />
           <main className="flex-1 flex flex-col items-center justify-center gap-2 sm:gap-4 max-w-7xl mx-auto w-full px-2 sm:px-4">
+            {countdown !== null && <Countdown count={countdown} />}
+            
             {notification && (
               <div className="w-full flex justify-center mb-2 sm:mb-4">
                 <Notification
@@ -581,6 +604,7 @@ function App() {
               onDelete={getCurrentRemoveLetter()}
               onEnter={getCurrentSubmitGuess()}
               disabled={isGameDisabled()}
+              isVimMode={modoComando}
             />
 
             {/* Modal de vitória/derrota para modo dueto */}

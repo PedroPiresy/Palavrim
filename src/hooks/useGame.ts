@@ -79,7 +79,7 @@ export const useGame = (
       }));
       setSelectedIndex(0);
       setSpeedRunTime(0);
-      setIsSpeedRunActive(true);
+      setIsSpeedRunActive(false);
     } catch (error) {
       console.error('Erro ao iniciar speed run:', error);
       notify('Erro ao iniciar speed run. Usando modo offline.');
@@ -87,6 +87,10 @@ export const useGame = (
       setLoading(false);
     }
   };
+
+  const activateSpeedRunTimer = useCallback(() => {
+    setIsSpeedRunActive(true);
+  }, []);
 
   // Atualizar tempo do speed run
   const updateSpeedRunTime = (time: number) => {
@@ -367,6 +371,7 @@ export const useGame = (
     selectedIndex,
     selectIndex,
     startSpeedRun,
+    activateSpeedRunTimer,
     updateSpeedRunTime,
     isSpeedRunActive,
     speedRunTime,

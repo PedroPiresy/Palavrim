@@ -61,16 +61,16 @@ export const SpeedRunHelpModal: React.FC<SpeedRunHelpModalProps> = ({ isOpen, on
           <div className="pt-4 flex flex-col sm:flex-row gap-3">
             <button
               onClick={onNormalMode}
-              className="flex-1 py-3 px-5 rounded-lg bg-[#2d2d2d] text-[#d0d0d0] font-bold text-base hover:bg-[#3d3d3d] border border-[#3d3d3d] hover:border-[#8b5cf6] transition-all duration-200 flex items-center justify-center gap-2"
+              className="py-2 px-4 rounded-lg bg-[#2d2d2d] text-[#d0d0d0] font-bold text-sm hover:bg-[#3d3d3d] border border-[#3d3d3d] hover:border-[#8b5cf6] transition-all duration-200 flex items-center justify-center gap-2"
             >
-              <Home size={18} />
-              Modo Normal
+              <Home size={16} />
+              <span className="whitespace-nowrap">Modo Normal</span>
             </button>
             <button
               onClick={onStart}
-              className="flex-1 py-3 px-5 rounded-lg bg-gradient-to-r from-[#8b5cf6] to-[#a855f7] text-white font-bold text-base hover:from-[#7c3aed] hover:to-[#9333ea] transition-all duration-200 flex items-center justify-center gap-2 whitespace-nowrap"
+              className="flex-1 py-2 px-4 rounded-lg bg-gradient-to-r from-[#8b5cf6] to-[#a855f7] text-white font-bold text-sm hover:from-[#7c3aed] hover:to-[#9333ea] transition-all duration-200 flex items-center justify-center gap-2 whitespace-nowrap"
             >
-              <Play size={18} />
+              <Play size={16} />
               Começar Speed Run
             </button>
           </div>

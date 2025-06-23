@@ -8,6 +8,7 @@ interface KeyboardProps {
   onDelete: () => void;
   onEnter: () => void;
   disabled?: boolean;
+  isVimMode?: boolean;
 }
 
 export const Keyboard: React.FC<KeyboardProps> = ({
@@ -15,7 +16,8 @@ export const Keyboard: React.FC<KeyboardProps> = ({
   onKeyPress,
   onDelete,
   onEnter,
-  disabled = false
+  disabled = false,
+  isVimMode = false,
 }) => {
   const keyRows = [
     ['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'],
@@ -71,7 +73,7 @@ export const Keyboard: React.FC<KeyboardProps> = ({
   // Keyboard event listener
   React.useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (disabled) return;
+      if (disabled || isVimMode) return;
       
       const key = event.key.toUpperCase();
       
@@ -86,7 +88,7 @@ export const Keyboard: React.FC<KeyboardProps> = ({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onKeyPress, onDelete, onEnter, disabled]);
+  }, [onKeyPress, onDelete, onEnter, disabled, isVimMode]);
 
   return (
     <div className="w-full max-w-2xl sm:max-w-4xl mx-auto p-2 sm:p-6 space-y-2 sm:space-y-3">
