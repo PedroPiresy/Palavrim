@@ -123,7 +123,7 @@ function App() {
   const [showStats, setShowStats] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
   const [stats, setStats] = useState<GameStats>(getInitialStats());
-  const [modo, setModo] = useState<'normal' | 'dueto' | 'abracatetra' | 'speedrun'>('normal');
+  const [modo, setModo] = useState<'normal' | 'abracadupla' | 'abracatetra' | 'speedrun'>('normal');
   const [revealSpellUses, setRevealSpellUses] = useState(0);
   const [countdown, setCountdown] = useState<number | null>(null);
   const { setIsOpen: setTourOpen } = useTour();
@@ -211,7 +211,7 @@ function App() {
   // Começar Dueto
   const comecarDueto = async () => {
     setShowDuetoHelp(false);
-    setModo('dueto');
+    setModo('abracadupla');
     await restartDueto();
   };
 
@@ -252,12 +252,12 @@ function App() {
 
       if (command === 'q!') {
         sairModoComando();
-        if (modo === 'dueto') restartDueto();
+        if (modo === 'abracadupla') restartDueto();
         else if (modo === 'abracatetra') restartTetra();
         else restartGame();
       } else if (command === 'admin') {
         sairModoComando();
-        if (modo === 'dueto') {
+        if (modo === 'abracadupla') {
           showNotification(`Respostas: ${duetoState.word1}, ${duetoState.word2}`);
         } else if (modo === 'abracatetra') {
           showNotification(`Respostas: ${tetraState.words.join(', ')}`);
@@ -419,7 +419,7 @@ function App() {
   const prevDuetoStatus1 = React.useRef(duetoState.status1);
   const prevDuetoStatus2 = React.useRef(duetoState.status2);
   useEffect(() => {
-    if (modo !== 'dueto') return;
+    if (modo !== 'abracadupla') return;
     const guessCount = duetoState.guesses.length;
     if (prevDuetoStatus1.current === 'playing' && duetoState.status1 === 'won') {
       handleWordWin(guessCount);
@@ -498,7 +498,7 @@ function App() {
   // Função para determinar qual função usar baseada no modo
   const getCurrentAddLetter = () => {
     switch (modo) {
-      case 'dueto': return addDuetoLetter;
+      case 'abracadupla': return addDuetoLetter;
       case 'abracatetra': return addTetraLetter;
       default: return addLetter;
     }
@@ -506,7 +506,7 @@ function App() {
 
   const getCurrentRemoveLetter = () => {
     switch (modo) {
-      case 'dueto': return removeDuetoLetter;
+      case 'abracadupla': return removeDuetoLetter;
       case 'abracatetra': return removeTetraLetter;
       default: return removeLetter;
     }
@@ -514,7 +514,7 @@ function App() {
 
   const getCurrentSubmitGuess = () => {
     switch (modo) {
-      case 'dueto': return submitDuetoGuess;
+      case 'abracadupla': return submitDuetoGuess;
       case 'abracatetra': return submitTetraGuess;
       default: return submitGuess;
     }
@@ -522,7 +522,7 @@ function App() {
 
   const getCurrentKeyboardStates = () => {
     switch (modo) {
-      case 'dueto': return getDuetoKeyboardStates();
+      case 'abracadupla': return getDuetoKeyboardStates();
       case 'abracatetra': return getTetraKeyboardStates();
       default: return getKeyboardStates();
     }
@@ -530,7 +530,7 @@ function App() {
 
   const isGameDisabled = () => {
     switch (modo) {
-      case 'dueto': 
+      case 'abracadupla': 
         return duetoState.status1 !== 'playing' && duetoState.status2 !== 'playing';
       case 'abracatetra': 
         return tetraState.status.every(s => s !== 'playing');
@@ -579,7 +579,7 @@ function App() {
             )}
             
             <div className="w-full flex flex-col items-center justify-center">
-              {modo === 'dueto' ? (
+              {modo === 'abracadupla' ? (
                 <div className="flex flex-col md:flex-row gap-4 md:gap-8 items-center justify-center w-full">
                   <DuetoGrid
                     guesses={duetoState.guesses}
@@ -659,7 +659,7 @@ function App() {
             />
 
             {/* Modal de vitória/derrota para modo dueto */}
-            {modo === 'dueto' && (duetoState.status1 !== 'playing' && duetoState.status2 !== 'playing') && (
+            {modo === 'abracadupla' && (duetoState.status1 !== 'playing' && duetoState.status2 !== 'playing') && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
                 <div className="p-4 sm:p-6 bg-[#2d2d2d] rounded-lg border border-[#3d3d3d] shadow-xl min-w-[280px] sm:min-w-[320px] max-w-full flex flex-col items-center">
                   <div className="space-y-2 text-center">
