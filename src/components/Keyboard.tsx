@@ -52,7 +52,7 @@ export const Keyboard: React.FC<KeyboardProps> = ({
     } else if (keyStatus === 'present') {
       return `${baseClass} ${widthClass} bg-[#facc15] text-[#1a1a1a] border border-[#facc15] font-bold`;
     } else if (keyStatus === 'absent') {
-      return `${baseClass} ${widthClass} bg-[#6b7280] border-[#6b7280] text-white font-bold`;
+      return `${baseClass} ${widthClass} bg-[#ef4444] border-[#ef4444] text-white font-bold`;
     } else {
       return `${baseClass} ${widthClass} bg-[#2d2d2d] text-[#d0d0d0] hover:bg-[#3d3d3d] border border-[#3d3d3d] hover:border-[#8b5cf6]`;
     }
@@ -93,10 +93,10 @@ export const Keyboard: React.FC<KeyboardProps> = ({
   // Função utilitária para cor de status
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'correct': return 'bg-[#4ade80] border-[#4ade80] text-black font-bold drop-shadow-[0_1px_1px_rgba(0,0,0,0.15)]';
-      case 'present': return 'bg-[#facc15] border-[#facc15] text-black font-bold drop-shadow-[0_1px_1px_rgba(0,0,0,0.15)]';
-      case 'absent': return 'bg-[#4b5563] border-[#6b7280] text-black font-bold drop-shadow-[0_1px_1px_rgba(0,0,0,0.25)]';
-      default: return 'bg-[#2d2d2d] border-[#3d3d3d] text-black font-bold drop-shadow-[0_1px_1px_rgba(0,0,0,0.25)]';
+      case 'correct': return 'bg-[#4ade80] border-[#4ade80] text-black font-bold drop-shadow-[0_1px_1px_rgba(0,0,0,0.15)]'; // Cor tecla verde
+      case 'present': return 'bg-[#facc15] border-[#facc15] text-black font-bold drop-shadow-[0_1px_1px_rgba(0,0,0,0.15)]'; // Cor tecla amarela
+      case 'absent': return 'bg-[#ef4444] border-[#ef4444] text-black font-bold drop-shadow-[0_1px_1px_rgba(0,0,0,0.25)]'; // Cor tecla vermelha
+      default: return 'bg-[#2d2d2d] border-[#3d3d3d] text-black font-bold drop-shadow-[0_1px_1px_rgba(0,0,0,0.25)]'; // Cor tecla cinza
     }
   };
 
