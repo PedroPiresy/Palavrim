@@ -6,7 +6,8 @@ export interface DuetoState {
   word1: string;
   word2: string;
   guesses: string[];
-  currentGuess: string;
+  currentGuess: string[];
+  selectedIndex: number;
   status1: 'playing' | 'won' | 'lost';
   status2: 'playing' | 'won' | 'lost';
   maxAttempts: number;
@@ -21,7 +22,8 @@ export const useDueto = (
     word1: '',
     word2: '',
     guesses: [],
-    currentGuess: '',
+    currentGuess: Array(5).fill(''),
+    selectedIndex: 0,
     status1: 'playing',
     status2: 'playing',
     maxAttempts: 7,
@@ -50,7 +52,8 @@ export const useDueto = (
         word1: palavra1,
         word2: finalWord2,
         guesses: [],
-        currentGuess: '',
+        currentGuess: Array(5).fill(''),
+        selectedIndex: 0,
         status1: 'playing',
         status2: 'playing',
         maxAttempts: 7,
@@ -121,51 +124,57 @@ export const useDueto = (
     }));
   }, [duetoState.guesses, duetoState.word1, duetoState.word2, getLetterStates]);
 
+  const selectIndex = (index: number) => {
+    if (duetoState.status1 !== 'playing' && duetoState.status2 !== 'playing') return;
+    setDuetoState(prev => ({ ...prev, selectedIndex: index }));
+  };
+
   const addLetter = (letter: string) => {
     if (duetoState.status1 !== 'playing' && duetoState.status2 !== 'playing') return;
-    if (duetoState.currentGuess.length >= 5) return;
-    
+    let guessArr = [...duetoState.currentGuess];
+    guessArr[duetoState.selectedIndex] = letter.toUpperCase();
     setDuetoState(prev => ({
       ...prev,
-      currentGuess: prev.currentGuess + letter.toUpperCase()
+      currentGuess: guessArr,
+      selectedIndex: Math.min(prev.selectedIndex + 1, 4)
     }));
   };
 
   const removeLetter = () => {
     if (duetoState.status1 !== 'playing' && duetoState.status2 !== 'playing') return;
-    
+    let guessArr = [...duetoState.currentGuess];
+    guessArr[duetoState.selectedIndex] = '';
     setDuetoState(prev => ({
       ...prev,
-      currentGuess: prev.currentGuess.slice(0, -1)
+      currentGuess: guessArr,
+      selectedIndex: Math.max(prev.selectedIndex - 1, 0)
     }));
   };
 
   const submitGuess = async () => {
     if (duetoState.status1 !== 'playing' && duetoState.status2 !== 'playing') return;
-    if (duetoState.currentGuess.length !== 5) return;
-
-    if (duetoState.guesses.includes(duetoState.currentGuess)) {
+    const guessString = duetoState.currentGuess.join('');
+    if (guessString.length !== 5 || duetoState.currentGuess.includes('')) return;
+    if (duetoState.guesses.includes(guessString)) {
       notify('Você já tentou esta palavra!');
       onGameEvent?.('duplicateGuess');
       return;
     }
-
     try {
-      const resultado = await api.verificarPalavra(duetoState.currentGuess);
+      const resultado = await api.verificarPalavra(guessString);
       if (!resultado.existe) {
         notify('Palavra não encontrada!');
         onGameEvent?.('invalidWord');
         return;
       }
-
-      const newGuesses = [...duetoState.guesses, duetoState.currentGuess];
-      const isCorrect1 = duetoState.currentGuess === duetoState.word1;
-      const isCorrect2 = duetoState.currentGuess === duetoState.word2;
+      const newGuesses = [...duetoState.guesses, guessString];
+      const isCorrect1 = guessString === duetoState.word1;
+      const isCorrect2 = guessString === duetoState.word2;
       const isGameOver = newGuesses.length >= duetoState.maxAttempts;
 
       // Verifica se o palpite não acertou nenhuma letra em nenhuma das palavras
-      const letterStates1 = getLetterStates(duetoState.currentGuess, duetoState.word1);
-      const letterStates2 = getLetterStates(duetoState.currentGuess, duetoState.word2);
+      const letterStates1 = getLetterStates(guessString, duetoState.word1);
+      const letterStates2 = getLetterStates(guessString, duetoState.word2);
       const isAllGray = letterStates1.every(state => state.status === 'absent') && 
                        letterStates2.every(state => state.status === 'absent');
 
@@ -187,7 +196,8 @@ export const useDueto = (
       setDuetoState(prev => ({
         ...prev,
         guesses: newGuesses,
-        currentGuess: '',
+        currentGuess: Array(5).fill(''),
+        selectedIndex: 0,
         status1: newStatus1,
         status2: newStatus2,
       }));
@@ -241,11 +251,13 @@ export const useDueto = (
 
   return {
     duetoState,
+    setDuetoState,
     getLetterStates,
     getKeyboardStates,
     addLetter,
     removeLetter,
     submitGuess,
+    selectIndex,
     restartDueto,
   };
 };

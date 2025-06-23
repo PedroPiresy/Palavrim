@@ -106,6 +106,7 @@ function App() {
     removeLetter: removeDuetoLetter,
     submitGuess: submitDuetoGuess,
     restartDueto,
+    selectIndex: selectDuetoIndex,
   } = useDueto(showNotification, (event) => {
     if (event === 'gameStarted') {
       triggerMascotMessage('duetoWelcome');
@@ -138,6 +139,7 @@ function App() {
     removeLetter: removeTetraLetter,
     submitGuess: submitTetraGuess,
     restartTetra,
+    selectIndex: tetraSelectIndex,
   } = useTetra(showNotification, (event) => {
     if (event === 'gameStarted') {
       triggerMascotMessage('tetraWelcome');
@@ -627,6 +629,10 @@ function App() {
     }
   };
 
+  const selectTetraIndex = (index: number) => {
+    if (modo === 'abracatetra') tetraSelectIndex(index);
+  };
+
   return (
     <Routes>
       <Route path="/notfound" element={<NotFound />} />
@@ -676,6 +682,8 @@ function App() {
                     status={duetoState.status1}
                     title="Palavra"
                     gridNumber={1}
+                    selectedIndex={duetoState.selectedIndex}
+                    selectIndex={selectDuetoIndex}
                   />
                   <DuetoGrid
                     guesses={duetoState.guesses}
@@ -687,6 +695,8 @@ function App() {
                     status={duetoState.status2}
                     title="Palavra"
                     gridNumber={2}
+                    selectedIndex={duetoState.selectedIndex}
+                    selectIndex={selectDuetoIndex}
                   />
                 </div>
               ) : modo === 'abracatetra' ? (
@@ -703,6 +713,8 @@ function App() {
                       status={tetraState.status[idx]}
                       title="Palavra"
                       gridNumber={idx + 1}
+                      selectedIndex={tetraState.selectedIndex}
+                      selectIndex={selectTetraIndex}
                     />
                   ))}
                 </div>

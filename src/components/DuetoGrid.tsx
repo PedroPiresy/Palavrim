@@ -3,7 +3,7 @@ import { LetterState } from '../types/game';
 
 interface DuetoGridProps {
   guesses: string[];
-  currentGuess: string;
+  currentGuess: string[];
   wordLength: number;
   maxAttempts: number;
   getLetterStates: (guess: string) => LetterState[];
@@ -11,6 +11,8 @@ interface DuetoGridProps {
   status: 'playing' | 'won' | 'lost';
   title: string;
   gridNumber: number;
+  selectedIndex: number;
+  selectIndex: (index: number) => void;
 }
 
 export const DuetoGrid: React.FC<DuetoGridProps> = ({
@@ -23,7 +25,29 @@ export const DuetoGrid: React.FC<DuetoGridProps> = ({
   status,
   title,
   gridNumber,
+  selectedIndex,
+  selectIndex,
 }) => {
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    const gridElement = containerRef.current;
+    if (gridElement) {
+      gridElement.focus();
+
+      const handleClick = () => {
+        if (document.activeElement !== gridElement) {
+          gridElement.focus();
+        }
+      };
+
+      document.addEventListener('click', handleClick);
+      return () => {
+        document.removeEventListener('click', handleClick);
+      };
+    }
+  }, []);
+
   const displayedGuesses = React.useMemo(() => {
     if (status === 'won') {
       const winningGuessIndex = guesses.findIndex(guess => 
@@ -40,7 +64,7 @@ export const DuetoGrid: React.FC<DuetoGridProps> = ({
     if (rowIndex < displayedGuesses.length) {
       return getLetterStates(displayedGuesses[rowIndex]);
     } else if (rowIndex === guesses.length && !isCompleted) {
-      const currentLetters = currentGuess.split('').map(letter => ({
+      const currentLetters = currentGuess.map(letter => ({
         letter,
         status: 'empty' as const
       }));
@@ -72,26 +96,53 @@ export const DuetoGrid: React.FC<DuetoGridProps> = ({
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (isCompleted) return;
+    if (document.activeElement !== e.currentTarget) return;
+    if (e.key === 'ArrowLeft') {
+      selectIndex(Math.max(selectedIndex - 1, 0));
+      e.preventDefault();
+    } else if (e.key === 'ArrowRight') {
+      selectIndex(Math.min(selectedIndex + 1, wordLength - 1));
+      e.preventDefault();
+    } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+      e.preventDefault();
+    }
+  };
+
   return (
     <div className="flex flex-col items-center gap-1 sm:gap-2 w-full max-w-xs mx-auto">
-      <div className={`flex flex-col gap-1 sm:gap-2 p-2 sm:p-4 ${isCompleted ? 'opacity-75' : ''} rounded-lg w-full`}>
+      <div
+        ref={containerRef}
+        tabIndex={0}
+        onKeyDown={handleKeyDown}
+        className={`grid-componente flex flex-col gap-1 sm:gap-2 p-2 sm:p-4 ${isCompleted ? 'opacity-75' : ''} rounded-lg w-full`}
+        role="grid"
+      >
         {Array(maxAttempts).fill(0).map((_, rowIndex) => {
           const rowData = getRowData(rowIndex);
           const isCurrentRow = rowIndex === guesses.length && !isCompleted;
-          
           return (
             <div key={rowIndex} className="flex gap-1 sm:gap-2 justify-center">
-              {rowData.map((cell, cellIndex) => (
-                <div
-                  key={cellIndex}
-                  className={getCellClass(cell.status, isCurrentRow)}
-                  style={{
-                    animationDelay: rowIndex < guesses.length ? `${cellIndex * 100}ms` : '0ms'
-                  }}
-                >
-                  {cell.letter}
-                </div>
-              ))}
+              {rowData.map((cell, cellIndex) => {
+                const isSelected = isCurrentRow && cellIndex === selectedIndex;
+                return (
+                  <div
+                    key={cellIndex}
+                    className={getCellClass(cell.status, isCurrentRow) + (isSelected ? ' ring-2 ring-purple-400 border-2 border-purple-500' : '')}
+                    style={{
+                      animationDelay: rowIndex < guesses.length ? `${cellIndex * 100}ms` : '0ms'
+                    }}
+                    onClick={isCurrentRow ? () => selectIndex(cellIndex) : undefined}
+                    tabIndex={isCurrentRow ? 0 : -1}
+                    role="gridcell"
+                    aria-selected={isSelected}
+                    aria-label={`Célula ${cellIndex + 1} da linha ${rowIndex + 1}${cell.letter ? `: ${cell.letter}` : ''}`}
+                  >
+                    {cell.letter}
+                  </div>
+                );
+              })}
             </div>
           );
         })}

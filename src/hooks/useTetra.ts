@@ -5,7 +5,8 @@ import { api } from '../utils/api';
 export interface TetraState {
   words: [string, string, string, string];
   guesses: string[];
-  currentGuess: string;
+  currentGuess: string[];
+  selectedIndex: number;
   status: ['playing' | 'won' | 'lost', 'playing' | 'won' | 'lost', 'playing' | 'won' | 'lost', 'playing' | 'won' | 'lost'];
   maxAttempts: number;
   loading: boolean;
@@ -18,7 +19,8 @@ export const useTetra = (
   const [tetraState, setTetraState] = useState<TetraState>({
     words: ['', '', '', ''],
     guesses: [],
-    currentGuess: '',
+    currentGuess: Array(5).fill(''),
+    selectedIndex: 0,
     status: ['playing', 'playing', 'playing', 'playing'],
     maxAttempts: 9,
     loading: false,
@@ -50,7 +52,8 @@ export const useTetra = (
       setTetraState({
         words: finalWords,
         guesses: [],
-        currentGuess: '',
+        currentGuess: Array(5).fill(''),
+        selectedIndex: 0,
         status: ['playing', 'playing', 'playing', 'playing'],
         maxAttempts: 9,
         loading: false,
@@ -120,55 +123,61 @@ export const useTetra = (
     }));
   }, [tetraState.guesses, tetraState.words, getLetterStates]);
 
+  const selectIndex = (index: number) => {
+    if (tetraState.status.every(s => s !== 'playing')) return;
+    setTetraState(prev => ({ ...prev, selectedIndex: index }));
+  };
+
   const addLetter = (letter: string) => {
     if (tetraState.status.every(s => s !== 'playing')) return;
-    if (tetraState.currentGuess.length >= 5) return;
-    
+    let guessArr = [...tetraState.currentGuess];
+    guessArr[tetraState.selectedIndex] = letter.toUpperCase();
     setTetraState(prev => ({
       ...prev,
-      currentGuess: prev.currentGuess + letter.toUpperCase()
+      currentGuess: guessArr,
+      selectedIndex: Math.min(prev.selectedIndex + 1, 4)
     }));
   };
 
   const removeLetter = () => {
     if (tetraState.status.every(s => s !== 'playing')) return;
-    
+    let guessArr = [...tetraState.currentGuess];
+    guessArr[tetraState.selectedIndex] = '';
     setTetraState(prev => ({
       ...prev,
-      currentGuess: prev.currentGuess.slice(0, -1)
+      currentGuess: guessArr,
+      selectedIndex: Math.max(prev.selectedIndex - 1, 0)
     }));
   };
 
   const submitGuess = async () => {
     if (tetraState.status.every(s => s !== 'playing')) return;
-    if (tetraState.currentGuess.length !== 5) return;
-
-    if (tetraState.guesses.includes(tetraState.currentGuess)) {
+    const guessString = tetraState.currentGuess.join('');
+    if (guessString.length !== 5 || tetraState.currentGuess.includes('')) return;
+    if (tetraState.guesses.includes(guessString)) {
       notify('Você já tentou esta palavra!');
       onGameEvent?.('duplicateGuess');
       return;
     }
-
     try {
-      const resultado = await api.verificarPalavra(tetraState.currentGuess);
+      const resultado = await api.verificarPalavra(guessString);
       if (!resultado.existe) {
         notify('Palavra não encontrada!');
         onGameEvent?.('invalidWord');
         return;
       }
-
-      const newGuesses = [...tetraState.guesses, tetraState.currentGuess];
+      const newGuesses = [...tetraState.guesses, guessString];
       const isGameOver = newGuesses.length >= tetraState.maxAttempts;
       
       // Verifica se o palpite não acertou nenhuma letra em nenhuma das palavras
       const isAllGray = tetraState.words.every(word => {
-        const letterStates = getLetterStates(tetraState.currentGuess, word);
+        const letterStates = getLetterStates(guessString, word);
         return letterStates.every(state => state.status === 'absent');
       });
       
       const newStatus = tetraState.words.map((word, i) => {
         if (tetraState.status[i] !== 'playing') return tetraState.status[i];
-        if (tetraState.currentGuess === word) return 'won';
+        if (guessString === word) return 'won';
         if (isGameOver) return 'lost';
         return 'playing';
       }) as TetraState['status'];
@@ -180,7 +189,8 @@ export const useTetra = (
       setTetraState(prev => ({
         ...prev,
         guesses: newGuesses,
-        currentGuess: '',
+        currentGuess: Array(5).fill(''),
+        selectedIndex: 0,
         status: newStatus,
       }));
 
@@ -232,11 +242,13 @@ export const useTetra = (
 
   return {
     tetraState,
+    setTetraState,
     getLetterStates,
     getKeyboardStates,
     addLetter,
     removeLetter,
     submitGuess,
+    selectIndex,
     restartTetra,
   };
 };
