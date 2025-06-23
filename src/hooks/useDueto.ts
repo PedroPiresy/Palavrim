@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { LetterState, KeyboardKey } from '../types/game';
-import { api } from '../utils/api';
+import { api, removerAcentos } from '../utils/api';
 
 export interface DuetoState {
   word1: string;
@@ -74,28 +74,28 @@ export const useDueto = (
     const result: LetterState[] = [];
     const wordArray = word.split('');
     const guessArray = guess.split('');
+    const wordArraySemAcento = wordArray.map(removerAcentos);
+    const guessArraySemAcento = guessArray.map(removerAcentos);
     const wordLetterCount: { [key: string]: number } = {};
-    
-    wordArray.forEach(letter => {
-      wordLetterCount[letter] = (wordLetterCount[letter] || 0) + 1;
+    wordArraySemAcento.forEach(letra => {
+      wordLetterCount[letra] = (wordLetterCount[letra] || 0) + 1;
     });
-    
-    guessArray.forEach((letter, index) => {
-      if (letter === wordArray[index]) {
-        result[index] = { letter, status: 'correct' };
-        wordLetterCount[letter]--;
+    // Primeiro: marca as letras corretas
+    guessArraySemAcento.forEach((letra, index) => {
+      if (letra === wordArraySemAcento[index]) {
+        result[index] = { letter: wordArray[index], status: 'correct' };
+        wordLetterCount[letra]--;
       } else {
-        result[index] = { letter, status: 'absent' };
+        result[index] = { letter: guessArray[index], status: 'absent' };
       }
     });
-    
-    guessArray.forEach((letter, index) => {
-      if (result[index].status === 'absent' && wordLetterCount[letter] > 0) {
-        result[index] = { letter, status: 'present' };
-        wordLetterCount[letter]--;
+    // Segundo: marca as presentes na posição errada
+    guessArraySemAcento.forEach((letra, index) => {
+      if (result[index].status === 'absent' && wordLetterCount[letra] > 0) {
+        result[index] = { letter: guessArray[index], status: 'present' };
+        wordLetterCount[letra]--;
       }
     });
-    
     return result;
   }, []);
 
