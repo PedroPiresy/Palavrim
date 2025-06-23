@@ -1,9 +1,9 @@
-import React, { useRef, useEffect } from 'react';
+import React from 'react';
 import { LetterState } from '../types/game';
 
 interface TetraGridProps {
   guesses: string[];
-  currentGuess: string[];
+  currentGuess: string;
   wordLength: number;
   maxAttempts: number;
   getLetterStates: (guess: string) => LetterState[];
@@ -11,8 +11,6 @@ interface TetraGridProps {
   status: 'playing' | 'won' | 'lost';
   title: string;
   gridNumber: number;
-  selectedIndex?: number;
-  selectIndex?: (index: number) => void;
 }
 
 export const TetraGrid: React.FC<TetraGridProps> = ({
@@ -25,31 +23,7 @@ export const TetraGrid: React.FC<TetraGridProps> = ({
   status,
   title,
   gridNumber,
-  selectedIndex = 0,
-  selectIndex = () => {},
 }) => {
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  // Efeito para manter o foco no grid
-  useEffect(() => {
-    const gridElement = containerRef.current;
-    if (gridElement) {
-      gridElement.focus();
-      
-      // Refocar o grid quando clicar em qualquer lugar da página
-      const handleClick = () => {
-        if (document.activeElement !== gridElement) {
-          gridElement.focus();
-        }
-      };
-      
-      document.addEventListener('click', handleClick);
-      return () => {
-        document.removeEventListener('click', handleClick);
-      };
-    }
-  }, []);
-
   const displayedGuesses = React.useMemo(() => {
     if (status === 'won') {
       const winningGuessIndex = guesses.findIndex(guess => 
@@ -66,10 +40,13 @@ export const TetraGrid: React.FC<TetraGridProps> = ({
     if (rowIndex < displayedGuesses.length) {
       return getLetterStates(displayedGuesses[rowIndex]);
     } else if (rowIndex === guesses.length && !isCompleted) {
-      const currentLetters = currentGuess.map(letter => ({
+      const currentLetters = currentGuess.split('').map(letter => ({
         letter,
         status: 'empty' as const
       }));
+      while (currentLetters.length < wordLength) {
+        currentLetters.push({ letter: '', status: 'empty' as const });
+      }
       return currentLetters;
     } else {
       return Array(wordLength).fill(0).map(() => ({
@@ -79,12 +56,8 @@ export const TetraGrid: React.FC<TetraGridProps> = ({
     }
   };
 
-  const getCellClass = (status: string, isCurrentRow: boolean, isSelected: boolean) => {
+  const getCellClass = (status: string, isCurrentRow: boolean) => {
     const baseClass = "w-6 h-6 sm:w-8 sm:h-8 md:w-12 md:h-12 border-2 rounded-md flex items-center justify-center text-xs sm:text-sm md:text-base font-bold transition-all duration-300";
-    let extra = '';
-    if (isSelected) {
-      extra = ' ring-2 sm:ring-4 ring-purple-400 border-2 border-purple-500';
-    }
     
     if (status === 'correct') {
       return `${baseClass} bg-gradient-to-br from-green-500 to-green-600 border-green-400 text-white shadow-lg shadow-green-500/25 animate-flip`;
@@ -93,66 +66,32 @@ export const TetraGrid: React.FC<TetraGridProps> = ({
     } else if (status === 'absent') {
       return `${baseClass} bg-gradient-to-br from-gray-600 to-gray-700 border-gray-500 text-white shadow-lg shadow-gray-500/25 animate-flip`;
     } else if (isCurrentRow && status === 'empty') {
-      return `${baseClass} bg-slate-800/50 border-purple-600/50 text-white hover:border-purple-500 hover:bg-slate-700/50${extra}`;
+      return `${baseClass} bg-slate-800/50 border-purple-600/50 text-white hover:border-purple-500 hover:bg-slate-700/50`;
     } else {
       return `${baseClass} bg-slate-800/30 border-slate-700/50 text-slate-400`;
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    if (isCompleted) return;
-    if (document.activeElement !== e.currentTarget) return;
-    
-    if (e.key === 'ArrowLeft') {
-      selectIndex(Math.max(selectedIndex - 1, 0));
-      e.preventDefault();
-    } else if (e.key === 'ArrowRight') {
-      selectIndex(Math.min(selectedIndex + 1, wordLength - 1));
-      e.preventDefault();
-    } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-      // Mantém o foco no grid quando usar as setas
-      e.preventDefault();
-    }
-  };
-
   return (
     <div className="flex flex-col items-center gap-1 w-full mx-auto">
-      <div 
-        ref={containerRef}
-        className={`grid-componente flex flex-col gap-1 p-1 sm:p-2 ${isCompleted ? 'opacity-75' : ''} rounded-lg w-full outline-none focus:ring-2 focus:ring-purple-500`}
-        tabIndex={0}
-        onKeyDown={handleKeyDown}
-        aria-label={`Grade ${gridNumber} do jogo`}
-        role="grid"
-      >
+      <div className={`flex flex-col gap-1 p-1 sm:p-2 ${isCompleted ? 'opacity-75' : ''} rounded-lg w-full`}>
         {Array(maxAttempts).fill(0).map((_, rowIndex) => {
           const rowData = getRowData(rowIndex);
           const isCurrentRow = rowIndex === guesses.length && !isCompleted;
           
           return (
             <div key={rowIndex} className="flex gap-1 justify-center">
-              {rowData.map((cell, cellIndex) => {
-                const isSelected = isCurrentRow && cellIndex === selectedIndex;
-                return (
-                  <div
-                    key={cellIndex}
-                    className={getCellClass(cell.status, isCurrentRow, isSelected)}
-                    style={{
-                      animationDelay: rowIndex < guesses.length ? `${cellIndex * 100}ms` : '0ms'
-                    }}
-                    onClick={isCurrentRow ? () => {
-                      selectIndex(cellIndex);
-                      containerRef.current?.focus();
-                    } : undefined}
-                    tabIndex={isCurrentRow ? 0 : -1}
-                    role="gridcell"
-                    aria-selected={isSelected}
-                    aria-label={`Célula ${cellIndex + 1} da linha ${rowIndex + 1}${cell.letter ? `: ${cell.letter}` : ''}`}
-                  >
-                    {cell.letter}
-                  </div>
-                );
-              })}
+              {rowData.map((cell, cellIndex) => (
+                <div
+                  key={cellIndex}
+                  className={getCellClass(cell.status, isCurrentRow)}
+                  style={{
+                    animationDelay: rowIndex < guesses.length ? `${cellIndex * 100}ms` : '0ms'
+                  }}
+                >
+                  {cell.letter}
+                </div>
+              ))}
             </div>
           );
         })}
