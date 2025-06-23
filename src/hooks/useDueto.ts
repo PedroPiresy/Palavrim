@@ -56,6 +56,9 @@ export const useDueto = (
         maxAttempts: 7,
         loading: false,
       });
+
+      // Dispara evento de início do jogo
+      onGameEvent?.('gameStarted');
     } catch (error) {
       console.error('Erro ao inicializar Dueto:', error);
       notify('Erro ao carregar modo Abracadupla.');
@@ -143,6 +146,7 @@ export const useDueto = (
 
     if (duetoState.guesses.includes(duetoState.currentGuess)) {
       notify('Você já tentou esta palavra!');
+      onGameEvent?.('duplicateGuess');
       return;
     }
 
@@ -150,6 +154,7 @@ export const useDueto = (
       const resultado = await api.verificarPalavra(duetoState.currentGuess);
       if (!resultado.existe) {
         notify('Palavra não encontrada!');
+        onGameEvent?.('invalidWord');
         return;
       }
 
@@ -157,6 +162,12 @@ export const useDueto = (
       const isCorrect1 = duetoState.currentGuess === duetoState.word1;
       const isCorrect2 = duetoState.currentGuess === duetoState.word2;
       const isGameOver = newGuesses.length >= duetoState.maxAttempts;
+
+      // Verifica se o palpite não acertou nenhuma letra em nenhuma das palavras
+      const letterStates1 = getLetterStates(duetoState.currentGuess, duetoState.word1);
+      const letterStates2 = getLetterStates(duetoState.currentGuess, duetoState.word2);
+      const isAllGray = letterStates1.every(state => state.status === 'absent') && 
+                       letterStates2.every(state => state.status === 'absent');
 
       let newStatus1 = duetoState.status1;
       let newStatus2 = duetoState.status2;
@@ -181,15 +192,40 @@ export const useDueto = (
         status2: newStatus2,
       }));
 
+      // Eventos para palpites ruins
+      if (isAllGray) {
+        if (newGuesses.length === 1) {
+          onGameEvent?.('firstGuessFlop');
+        } else {
+          onGameEvent?.('anotherBadGuess');
+        }
+      }
+
+      // Última tentativa
+      if (newGuesses.length === duetoState.maxAttempts - 1) {
+        onGameEvent?.('lastAttempt');
+      }
+
       // Notificações baseadas no resultado
-      if (isCorrect1 && isCorrect2) {
+      const gameIsWon = newStatus1 === 'won' && newStatus2 === 'won';
+      const justWonFirst = newStatus1 === 'won' && duetoState.status1 === 'playing';
+      const justWonSecond = newStatus2 === 'won' && duetoState.status2 === 'playing';
+
+      if (gameIsWon) {
+        // This handles the case where the last guess solves the second word, or both at once.
         notify('🎉 Incrível! Você acertou ambas as palavras!');
-      } else if (isCorrect1) {
-        notify('🎉 Primeira palavra correta!');
-      } else if (isCorrect2) {
-        notify('🎉 Segunda palavra correta!');
+        onGameEvent?.('gameWon');
+      } else if (justWonFirst || justWonSecond) {
+        // This is a true partial win. One word solved, the other still playing.
+        notify(justWonFirst ? '🎉 Primeira palavra correta!' : '🎉 Segunda palavra correta!');
+        onGameEvent?.('partialWin');
       } else if (isGameOver) {
+        // isGameOver is true, but gameIsWon is false, so it's a loss
         notify(`😔 Fim de jogo! Palavras: ${duetoState.word1}, ${duetoState.word2}`);
+        onGameEvent?.('gameLost');
+      } else {
+        // Not a win, not a loss, not game over. Just a guess.
+        onGameEvent?.('progress');
       }
 
       onGameEvent?.('guessSubmitted', { isCorrect1, isCorrect2, isGameOver });

@@ -104,7 +104,29 @@ function App() {
     removeLetter: removeDuetoLetter,
     submitGuess: submitDuetoGuess,
     restartDueto,
-  } = useDueto(showNotification);
+  } = useDueto(showNotification, (event) => {
+    if (event === 'gameStarted') {
+      triggerMascotMessage('duetoWelcome');
+    } else if (event === 'gameWon') {
+      triggerMascotMessage('duetoWin');
+    } else if (event === 'gameLost') {
+      triggerMascotMessage('duetoLoss');
+    } else if (event === 'partialWin') {
+      triggerMascotMessage('duetoPartialWin');
+    } else if (event === 'progress') {
+      triggerMascotMessage('duetoProgress');
+    } else if (event === 'invalidWord') {
+      triggerMascotMessage('duetoInvalidWord');
+    } else if (event === 'duplicateGuess') {
+      triggerMascotMessage('duetoDuplicateGuess');
+    } else if (event === 'firstGuessFlop') {
+      triggerMascotMessage('duetoFirstGuessFlop');
+    } else if (event === 'anotherBadGuess') {
+      triggerMascotMessage('duetoAnotherBadGuess');
+    } else if (event === 'lastAttempt') {
+      triggerMascotMessage('duetoLastAttempt');
+    }
+  });
 
   const {
     tetraState,
@@ -114,7 +136,29 @@ function App() {
     removeLetter: removeTetraLetter,
     submitGuess: submitTetraGuess,
     restartTetra,
-  } = useTetra(showNotification);
+  } = useTetra(showNotification, (event) => {
+    if (event === 'gameStarted') {
+      triggerMascotMessage('tetraWelcome');
+    } else if (event === 'gameWon') {
+      triggerMascotMessage('tetraWin');
+    } else if (event === 'gameLost') {
+      triggerMascotMessage('tetraLoss');
+    } else if (event === 'partialWin') {
+      triggerMascotMessage('tetraPartialWin');
+    } else if (event === 'progress') {
+      triggerMascotMessage('tetraProgress');
+    } else if (event === 'invalidWord') {
+      triggerMascotMessage('tetraInvalidWord');
+    } else if (event === 'duplicateGuess') {
+      triggerMascotMessage('tetraDuplicateGuess');
+    } else if (event === 'firstGuessFlop') {
+      triggerMascotMessage('tetraFirstGuessFlop');
+    } else if (event === 'anotherBadGuess') {
+      triggerMascotMessage('tetraAnotherBadGuess');
+    } else if (event === 'lastAttempt') {
+      triggerMascotMessage('tetraLastAttempt');
+    }
+  });
 
   const [showHelp, setShowHelp] = useState(true);
   const [showSpeedRunHelp, setShowSpeedRunHelp] = useState(false);
@@ -174,14 +218,23 @@ function App() {
 
   // Reset logic for new games - reseta estados quando um novo jogo começa
   useEffect(() => {
-    if (gameState.gameStatus === 'playing' && gameState.guesses.length === 0) {
+    if (gameState.gameStatus === 'playing' && gameState.guesses.length === 0 && modo === 'normal') {
       setRevealSpellUses(0);        // Reseta contador de feitiços usados
       setIsCastingSpell(false);     // Para animações de feitiço
       setShouldExplode(false);      // Para animações de explosão
       setShowVictoryModal(false);   // Fecha o modal de vitória/derrota
       triggerMascotMessage('welcome'); // Mensagem de boas-vindas
     }
-  }, [gameState.gameStatus, gameState.guesses.length]);
+  }, [gameState.gameStatus, gameState.guesses.length, modo]);
+
+  // Efeito para detectar mudanças de modo e disparar mensagens específicas
+  useEffect(() => {
+    if (modo === 'abracadupla' && duetoState.guesses.length === 0 && !duetoState.loading) {
+      triggerMascotMessage('duetoWelcome');
+    } else if (modo === 'abracatetra' && tetraState.guesses.length === 0 && !tetraState.loading) {
+      triggerMascotMessage('tetraWelcome');
+    }
+  }, [modo, duetoState.guesses.length, duetoState.loading, tetraState.guesses.length, tetraState.loading]);
 
   // Estado do modo comando Vim
   const [modoComando, setModoComando] = useState(false);

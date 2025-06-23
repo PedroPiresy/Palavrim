@@ -55,6 +55,9 @@ export const useTetra = (
         maxAttempts: 9,
         loading: false,
       });
+
+      // Dispara evento de início do jogo
+      onGameEvent?.('gameStarted');
     } catch (error) {
       console.error('Erro ao inicializar Tetra:', error);
       notify('Erro ao carregar modo Abracatetra.');
@@ -142,6 +145,7 @@ export const useTetra = (
 
     if (tetraState.guesses.includes(tetraState.currentGuess)) {
       notify('Você já tentou esta palavra!');
+      onGameEvent?.('duplicateGuess');
       return;
     }
 
@@ -149,11 +153,18 @@ export const useTetra = (
       const resultado = await api.verificarPalavra(tetraState.currentGuess);
       if (!resultado.existe) {
         notify('Palavra não encontrada!');
+        onGameEvent?.('invalidWord');
         return;
       }
 
       const newGuesses = [...tetraState.guesses, tetraState.currentGuess];
       const isGameOver = newGuesses.length >= tetraState.maxAttempts;
+      
+      // Verifica se o palpite não acertou nenhuma letra em nenhuma das palavras
+      const isAllGray = tetraState.words.every(word => {
+        const letterStates = getLetterStates(tetraState.currentGuess, word);
+        return letterStates.every(state => state.status === 'absent');
+      });
       
       const newStatus = tetraState.words.map((word, i) => {
         if (tetraState.status[i] !== 'playing') return tetraState.status[i];
@@ -173,15 +184,39 @@ export const useTetra = (
         status: newStatus,
       }));
 
+      // Eventos para palpites ruins
+      if (isAllGray) {
+        if (newGuesses.length === 1) {
+          onGameEvent?.('firstGuessFlop');
+        } else {
+          onGameEvent?.('anotherBadGuess');
+        }
+      }
+
+      // Última tentativa
+      if (newGuesses.length === tetraState.maxAttempts - 1) {
+        onGameEvent?.('lastAttempt');
+      }
+
       // Notificações baseadas no resultado
-      if (newCorrectWords > 0) {
+      const gameIsWon = correctWords === 4;
+
+      if (gameIsWon) {
+        notify('🎉 Incrível! Você acertou todas as quatro palavras!');
+        onGameEvent?.('gameWon');
+      } else if (newCorrectWords > 0) {
         if (newCorrectWords === 1) {
-          notify(`🎉 Palavra ${correctWords} correta!`);
+          notify(`🎉 ${correctWords}ª palavra correta!`);
         } else {
           notify(`🎉 ${newCorrectWords} palavras corretas de uma vez!`);
         }
+        onGameEvent?.('partialWin');
       } else if (isGameOver) {
         notify(`😔 Fim de jogo! Palavras: ${tetraState.words.join(', ')}`);
+        onGameEvent?.('gameLost');
+      } else {
+        // Progresso geral
+        onGameEvent?.('progress');
       }
 
       onGameEvent?.('guessSubmitted', { correctWords: newCorrectWords, isGameOver });
