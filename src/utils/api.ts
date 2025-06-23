@@ -42,13 +42,10 @@ export const api = {
 
   async verificarPalavra(palavra: string): Promise<{ existe: boolean; estados: ('correct' | 'present' | 'absent')[] }> {
     try {
-      // Primeiro verifica se a palavra existe no dicionário
-      const responsePrefixo = await fetch(`${API_BASE_URL}/prefixo/${palavra.toLowerCase()}`);
-      if (!responsePrefixo.ok) return { existe: false, estados: [] };
-      const palavras = await responsePrefixo.json();
-      const palavraExiste = palavras.some((p: string) => 
-        p.toUpperCase() === palavra.toUpperCase()
-      );
+      // Verifica se a palavra existe no dicionário usando a rota /valida
+      const responseValida = await fetch(`${API_BASE_URL}/valida/${palavra.toLowerCase()}`);
+      if (!responseValida.ok) return { existe: false, estados: [] };
+      const palavraExiste = await responseValida.json();
 
       if (!palavraExiste) {
         return { existe: false, estados: [] };
