@@ -8,6 +8,7 @@ interface TetraGridProps {
   maxAttempts: number;
   getLetterStates: (guess: string) => LetterState[];
   isCompleted: boolean;
+  status: 'playing' | 'won' | 'lost';
   title: string;
   gridNumber: number;
 }
@@ -19,13 +20,26 @@ export const TetraGrid: React.FC<TetraGridProps> = ({
   maxAttempts,
   getLetterStates,
   isCompleted,
+  status,
   title,
   gridNumber,
 }) => {
+  const displayedGuesses = React.useMemo(() => {
+    if (status === 'won') {
+      const winningGuessIndex = guesses.findIndex(guess => 
+        getLetterStates(guess).every(s => s.status === 'correct')
+      );
+      if (winningGuessIndex !== -1) {
+        return guesses.slice(0, winningGuessIndex + 1);
+      }
+    }
+    return guesses;
+  }, [guesses, status, getLetterStates]);
+
   const getRowData = (rowIndex: number) => {
-    if (rowIndex < guesses.length) {
-      return getLetterStates(guesses[rowIndex]);
-    } else if (rowIndex === guesses.length) {
+    if (rowIndex < displayedGuesses.length) {
+      return getLetterStates(displayedGuesses[rowIndex]);
+    } else if (rowIndex === guesses.length && !isCompleted) {
       const currentLetters = currentGuess.split('').map(letter => ({
         letter,
         status: 'empty' as const
@@ -43,7 +57,7 @@ export const TetraGrid: React.FC<TetraGridProps> = ({
   };
 
   const getCellClass = (status: string, isCurrentRow: boolean) => {
-    const baseClass = "w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 border-2 rounded-md flex items-center justify-center text-xs sm:text-sm md:text-base font-bold transition-all duration-300";
+    const baseClass = "w-6 h-6 sm:w-8 sm:h-8 md:w-12 md:h-12 border-2 rounded-md flex items-center justify-center text-xs sm:text-sm md:text-base font-bold transition-all duration-300";
     
     if (status === 'correct') {
       return `${baseClass} bg-gradient-to-br from-green-500 to-green-600 border-green-400 text-white shadow-lg shadow-green-500/25 animate-flip`;
@@ -59,21 +73,11 @@ export const TetraGrid: React.FC<TetraGridProps> = ({
   };
 
   return (
-    <div className="flex flex-col items-center gap-1 w-full max-w-[200px] mx-auto">
-      {/* Título do grid */}
-      <div className="text-center mb-1">
-        <h3 className="text-xs font-bold text-purple-300 font-mono">
-          #{gridNumber}
-        </h3>
-        {isCompleted && (
-          <div className="text-xs text-green-400 font-mono">✓</div>
-        )}
-      </div>
-      
+    <div className="flex flex-col items-center gap-1 w-full mx-auto">
       <div className={`flex flex-col gap-1 p-1 sm:p-2 ${isCompleted ? 'opacity-75' : ''} rounded-lg w-full`}>
         {Array(maxAttempts).fill(0).map((_, rowIndex) => {
           const rowData = getRowData(rowIndex);
-          const isCurrentRow = rowIndex === guesses.length;
+          const isCurrentRow = rowIndex === guesses.length && !isCompleted;
           
           return (
             <div key={rowIndex} className="flex gap-1 justify-center">

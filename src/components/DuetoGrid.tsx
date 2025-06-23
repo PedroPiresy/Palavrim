@@ -8,6 +8,7 @@ interface DuetoGridProps {
   maxAttempts: number;
   getLetterStates: (guess: string) => LetterState[];
   isCompleted: boolean;
+  status: 'playing' | 'won' | 'lost';
   title: string;
   gridNumber: number;
 }
@@ -19,13 +20,26 @@ export const DuetoGrid: React.FC<DuetoGridProps> = ({
   maxAttempts,
   getLetterStates,
   isCompleted,
+  status,
   title,
   gridNumber,
 }) => {
+  const displayedGuesses = React.useMemo(() => {
+    if (status === 'won') {
+      const winningGuessIndex = guesses.findIndex(guess => 
+        getLetterStates(guess).every(s => s.status === 'correct')
+      );
+      if (winningGuessIndex !== -1) {
+        return guesses.slice(0, winningGuessIndex + 1);
+      }
+    }
+    return guesses;
+  }, [guesses, status, getLetterStates]);
+
   const getRowData = (rowIndex: number) => {
-    if (rowIndex < guesses.length) {
-      return getLetterStates(guesses[rowIndex]);
-    } else if (rowIndex === guesses.length) {
+    if (rowIndex < displayedGuesses.length) {
+      return getLetterStates(displayedGuesses[rowIndex]);
+    } else if (rowIndex === guesses.length && !isCompleted) {
       const currentLetters = currentGuess.split('').map(letter => ({
         letter,
         status: 'empty' as const
@@ -60,20 +74,10 @@ export const DuetoGrid: React.FC<DuetoGridProps> = ({
 
   return (
     <div className="flex flex-col items-center gap-1 sm:gap-2 w-full max-w-xs mx-auto">
-      {/* Título do grid */}
-      <div className="text-center mb-1 sm:mb-2">
-        <h3 className="text-xs sm:text-sm font-bold text-purple-300 font-mono">
-          {title} #{gridNumber}
-        </h3>
-        {isCompleted && (
-          <div className="text-xs text-green-400 font-mono">✓ Completo</div>
-        )}
-      </div>
-      
       <div className={`flex flex-col gap-1 sm:gap-2 p-2 sm:p-4 ${isCompleted ? 'opacity-75' : ''} rounded-lg w-full`}>
         {Array(maxAttempts).fill(0).map((_, rowIndex) => {
           const rowData = getRowData(rowIndex);
-          const isCurrentRow = rowIndex === guesses.length;
+          const isCurrentRow = rowIndex === guesses.length && !isCompleted;
           
           return (
             <div key={rowIndex} className="flex gap-1 sm:gap-2 justify-center">

@@ -514,6 +514,7 @@ function App() {
                     maxAttempts={7}
                     getLetterStates={g => getDuetoLetterStates(g, duetoState.word1)}
                     isCompleted={duetoState.status1 !== 'playing'}
+                    status={duetoState.status1}
                     title="Palavra"
                     gridNumber={1}
                   />
@@ -524,12 +525,13 @@ function App() {
                     maxAttempts={7}
                     getLetterStates={g => getDuetoLetterStates(g, duetoState.word2)}
                     isCompleted={duetoState.status2 !== 'playing'}
+                    status={duetoState.status2}
                     title="Palavra"
                     gridNumber={2}
                   />
                 </div>
               ) : modo === 'abracatetra' ? (
-                <div className="grid grid-cols-2 gap-2 sm:gap-4 md:gap-6 w-full max-w-4xl">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 w-full max-w-7xl mx-auto">
                   {tetraState.words.map((word, idx) => (
                     <TetraGrid
                       key={idx}
@@ -539,6 +541,7 @@ function App() {
                       maxAttempts={9}
                       getLetterStates={g => getTetraLetterStates(g, word)}
                       isCompleted={tetraState.status[idx] !== 'playing'}
+                      status={tetraState.status[idx]}
                       title="Palavra"
                       gridNumber={idx + 1}
                     />
