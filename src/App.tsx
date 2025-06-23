@@ -28,6 +28,7 @@ import {
   updateStatsOnLoss,
   updateLetterFrequency,
   updateWeeklyEvolution,
+  updateStatsOnWordWin,
 } from './utils/stats';
 import { getMascotMessage, MessageType } from './utils/mascotMessages';
 import { Mascot } from './components/Mascot';
@@ -399,6 +400,48 @@ function App() {
       triggerMascotMessage('lastAttempt');
     }
   }, [gameState.guesses]);
+
+  const handleWordWin = (guessCount: number) => {
+    setStats(prevStats => {
+      const { newStats, leveledUp, xpGained } = updateStatsOnWordWin(prevStats, guessCount);
+      showNotification(`+${xpGained} XP!`);
+      if (leveledUp) {
+        setTimeout(() => {
+          showNotification(`🎉 Nível ${newStats.level}! ${newStats.rank}! +50 de Mana!`);
+          triggerMascotMessage('levelUp', newStats.rank);
+        }, 1000);
+      }
+      saveStats(newStats);
+      return newStats;
+    });
+  };
+
+  const prevDuetoStatus1 = React.useRef(duetoState.status1);
+  const prevDuetoStatus2 = React.useRef(duetoState.status2);
+  useEffect(() => {
+    if (modo !== 'dueto') return;
+    const guessCount = duetoState.guesses.length;
+    if (prevDuetoStatus1.current === 'playing' && duetoState.status1 === 'won') {
+      handleWordWin(guessCount);
+    }
+    if (prevDuetoStatus2.current === 'playing' && duetoState.status2 === 'won') {
+      handleWordWin(guessCount);
+    }
+    prevDuetoStatus1.current = duetoState.status1;
+    prevDuetoStatus2.current = duetoState.status2;
+  }, [duetoState.status1, duetoState.status2, modo, duetoState.guesses.length]);
+
+  const prevTetraStatuses = React.useRef(tetraState.status);
+  useEffect(() => {
+    if (modo !== 'abracatetra') return;
+    const guessCount = tetraState.guesses.length;
+    tetraState.status.forEach((currentStatus, index) => {
+      if(prevTetraStatuses.current[index] === 'playing' && currentStatus === 'won') {
+        handleWordWin(guessCount);
+      }
+    });
+    prevTetraStatuses.current = tetraState.status;
+  }, [tetraState.status, modo, tetraState.guesses.length]);
 
   const castRevealLetterSpell = () => {
     const cost = 25;

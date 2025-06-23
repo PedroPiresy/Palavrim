@@ -101,31 +101,50 @@ export const calculateXpGained = (guesses: number): number => {
   return Math.max(20, base_xp - penalty); // Mínimo de 20 XP
 };
 
-// Atualiza estatísticas quando o jogador ganha
+// Função para aplicar XP e gerenciar subida de nível
+const applyXpAndLevelUp = (stats: GameStats, guessCount: number): { newStats: GameStats; leveledUp: boolean, xpGained: number } => {
+  const xpGained = calculateXpGained(guessCount);
+  const newStats = { ...stats, xp: stats.xp + xpGained };
+
+  const oldLevel = newStats.level;
+  let xpForNext = getXpForNextLevel(newStats.level);
+
+  while (newStats.xp >= xpForNext) {
+    newStats.level++;
+    newStats.xp -= xpForNext;
+    xpForNext = getXpForNextLevel(newStats.level);
+  }
+
+  newStats.rank = getRankForLevel(newStats.level);
+  const leveledUp = newStats.level > oldLevel;
+
+  if (leveledUp) {
+    newStats.mana = Math.min(newStats.mana + 50, 100);
+  }
+
+  return { newStats, leveledUp, xpGained };
+};
+
+// Atualiza estatísticas quando o jogador ganha (jogo completo)
 export const updateStatsOnWin = (stats: GameStats, guessCount: number): { newStats: GameStats; leveledUp: boolean, xpGained: number } => {
   const newStats = { ...stats };
   
-  // Atualiza estatísticas básicas
   newStats.gamesPlayed++;
   newStats.gamesWon++;
   newStats.winStreak++;
   newStats.totalAttemptsOnWin += guessCount;
   
-  // Atualiza maior sequência de vitórias se necessário
   if (newStats.winStreak > newStats.maxWinStreak) {
     newStats.maxWinStreak = newStats.winStreak;
   }
   
-  // Incrementa contador de tentativas
   if (guessCount <= 6) {
     newStats.guesses[guessCount as keyof typeof newStats.guesses]++;
   }
   
-  // Atualiza datas
   newStats.lastPlayed = new Date().toISOString().split('T')[0];
   newStats.lastWon = new Date().toISOString().split('T')[0];
   
-  // Atualiza estatísticas semanais
   const currentWeek = newStats.weeklyEvolution.find(w => w.weekStartDate === updateWeeklyEvolution(newStats).weeklyEvolution.slice(-1)[0].weekStartDate);
   if (currentWeek) {
     currentWeek.gamesPlayed++;
@@ -133,32 +152,14 @@ export const updateStatsOnWin = (stats: GameStats, guessCount: number): { newSta
     currentWeek.totalAttemptsOnWin += guessCount;
   }
 
-  // Adiciona XP
-  const xpGained = calculateXpGained(guessCount);
-  newStats.xp += xpGained;
-  
-  // Verifica se subiu de nível
-  const oldLevel = newStats.level;
-  let xpForNext = getXpForNextLevel(newStats.level);
-  
-  // Loop para subir múltiplos níveis se necessário
-  while (newStats.xp >= xpForNext) {
-    newStats.level++;
-    newStats.xp -= xpForNext;
-    xpForNext = getXpForNextLevel(newStats.level);
-  }
-  
-  // Atualiza rank baseado no novo nível
-  newStats.rank = getRankForLevel(newStats.level);
-  
-  const leveledUp = newStats.level > oldLevel;
-  
-  // Adiciona 50 mana ao subir de nível (máximo 100)
-  if (leveledUp) {
-    newStats.mana = Math.min(newStats.mana + 50, 100);
-  }
-  
-  return { newStats, leveledUp, xpGained };
+  // Aplica XP e lida com o level up
+  return applyXpAndLevelUp(newStats, guessCount);
+};
+
+// Atualiza estatísticas ao vencer uma única palavra (Dueto/Tetra)
+export const updateStatsOnWordWin = (stats: GameStats, guessCount: number): { newStats: GameStats; leveledUp: boolean, xpGained: number } => {
+  // Apenas dá XP, não mexe nas estatísticas de jogo (partidas, vitórias, etc.)
+  return applyXpAndLevelUp(stats, guessCount);
 };
 
 // Atualiza estatísticas quando o jogador perde
