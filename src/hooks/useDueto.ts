@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { LetterState, KeyboardKey } from '../types/game';
 import { api, removerAcentos } from '../utils/api';
+import { buscarPalavraAcentuada } from '../utils/accentCorrection';
 
 export interface DuetoState {
   word1: string;
@@ -29,6 +30,9 @@ export const useDueto = (
     maxAttempts: 7,
     loading: false,
   });
+
+  // Novo estado para armazenar as versões acentuadas dos palpites
+  const [guessesAcentuadas, setGuessesAcentuadas] = useState<string[]>([]);
 
   const notify = (msg: string) => {
     if (showNotification) showNotification(msg);
@@ -60,6 +64,8 @@ export const useDueto = (
         loading: false,
       });
 
+      setGuessesAcentuadas([]); // Limpa as versões acentuadas
+
       // Dispara evento de início do jogo
       onGameEvent?.('gameStarted');
     } catch (error) {
@@ -69,52 +75,83 @@ export const useDueto = (
     }
   };
 
+  // Função para obter a versão acentuada de um palpite
+  const getGuessAcentuada = useCallback((index: number): string => {
+    if (index < guessesAcentuadas.length) {
+      return guessesAcentuadas[index];
+    }
+    // Fallback para a versão original se não tiver a acentuada
+    return duetoState.guesses[index] || '';
+  }, [guessesAcentuadas, duetoState.guesses]);
+
   const getLetterStates = useCallback((guess: string, word: string): LetterState[] => {
     if (!word) return [];
+    
+    // Encontra o índice deste palpite
+    const guessIndex = duetoState.guesses.indexOf(guess);
+    
+    // Se encontrou o índice, usa a versão acentuada para exibição
+    const displayGuess = guessIndex >= 0 ? getGuessAcentuada(guessIndex) : guess;
+    
     const result: LetterState[] = [];
     const wordArray = word.split('');
-    const guessArray = guess.split('');
+    const guessArray = guess.split(''); // Usa a versão original para lógica
+    const displayArray = displayGuess.split(''); // Usa a versão acentuada para exibição
+    
     const wordArraySemAcento = wordArray.map(removerAcentos);
     const guessArraySemAcento = guessArray.map(removerAcentos);
     const wordLetterCount: { [key: string]: number } = {};
+    
     wordArraySemAcento.forEach(letra => {
       wordLetterCount[letra] = (wordLetterCount[letra] || 0) + 1;
     });
+    
     // Primeiro: marca as letras corretas
     guessArraySemAcento.forEach((letra, index) => {
       if (letra === wordArraySemAcento[index]) {
-        result[index] = { letter: wordArray[index], status: 'correct' };
+        result[index] = { 
+          letter: displayArray[index] || guessArray[index], // Usa versão acentuada se disponível
+          status: 'correct' 
+        };
         wordLetterCount[letra]--;
       } else {
-        result[index] = { letter: guessArray[index], status: 'absent' };
+        result[index] = { 
+          letter: displayArray[index] || guessArray[index], // Usa versão acentuada se disponível
+          status: 'absent' 
+        };
       }
     });
+    
     // Segundo: marca as presentes na posição errada
     guessArraySemAcento.forEach((letra, index) => {
       if (result[index].status === 'absent' && wordLetterCount[letra] > 0) {
-        result[index] = { letter: guessArray[index], status: 'present' };
+        result[index] = { 
+          letter: displayArray[index] || guessArray[index], // Usa versão acentuada se disponível
+          status: 'present' 
+        };
         wordLetterCount[letra]--;
       }
     });
+    
     return result;
-  }, []);
+  }, [duetoState.guesses, getGuessAcentuada]);
 
   const getKeyboardStates = useCallback((): KeyboardKey[] => {
     const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     return alphabet.split('').map(letter => {
       // Para cada palavra, calcula o status da letra
-      const status1 = duetoState.guesses.some(guess => getLetterStates(guess, duetoState.word1).some(ls => ls.letter === letter && ls.status === 'correct'))
+      const status1 = duetoState.guesses.some(guess => getLetterStates(guess, duetoState.word1).some(ls => removerAcentos(ls.letter) === letter && ls.status === 'correct'))
         ? 'correct'
-        : duetoState.guesses.some(guess => getLetterStates(guess, duetoState.word1).some(ls => ls.letter === letter && ls.status === 'present'))
+        : duetoState.guesses.some(guess => getLetterStates(guess, duetoState.word1).some(ls => removerAcentos(ls.letter) === letter && ls.status === 'present'))
         ? 'present'
-        : duetoState.guesses.some(guess => getLetterStates(guess, duetoState.word1).some(ls => ls.letter === letter && ls.status === 'absent'))
+        : duetoState.guesses.some(guess => getLetterStates(guess, duetoState.word1).some(ls => removerAcentos(ls.letter) === letter && ls.status === 'absent'))
         ? 'absent'
         : 'unused';
-      const status2 = duetoState.guesses.some(guess => getLetterStates(guess, duetoState.word2).some(ls => ls.letter === letter && ls.status === 'correct'))
+      const status2 = duetoState.guesses.some(guess => getLetterStates(guess, duetoState.word2).some(ls => removerAcentos(ls.letter) === letter && ls.status === 'correct'))
         ? 'correct'
-        : duetoState.guesses.some(guess => getLetterStates(guess, duetoState.word2).some(ls => ls.letter === letter && ls.status === 'present'))
+        : duetoState.guesses.some(guess => getLetterStates(guess, duetoState.word2).some(ls => removerAcentos(ls.letter) === letter && ls.status === 'present'))
         ? 'present'
-        : duetoState.guesses.some(guess => getLetterStates(guess, duetoState.word2).some(ls => ls.letter === letter && ls.status === 'absent'))
+        : duetoState.guesses.some(guess => getLetterStates(guess, duetoState.word2).some(ls => removerAcentos(ls.letter) === letter && ls.status === 'absent'))
         ? 'absent'
         : 'unused';
       return {
@@ -167,7 +204,13 @@ export const useDueto = (
         onGameEvent?.('invalidWord');
         return;
       }
+
+      // Busca a versão acentuada da palavra antes de adicionar aos palpites
+      const palavraAcentuada = await buscarPalavraAcentuada(guessString);
+      
       const newGuesses = [...duetoState.guesses, guessString];
+      const newGuessesAcentuadas = [...guessesAcentuadas, palavraAcentuada];
+      
       const isCorrect1 = guessString === duetoState.word1;
       const isCorrect2 = guessString === duetoState.word2;
       const isGameOver = newGuesses.length >= duetoState.maxAttempts;
@@ -201,6 +244,8 @@ export const useDueto = (
         status1: newStatus1,
         status2: newStatus2,
       }));
+
+      setGuessesAcentuadas(newGuessesAcentuadas);
 
       // Eventos para palpites ruins
       if (isAllGray) {
@@ -259,5 +304,6 @@ export const useDueto = (
     submitGuess,
     selectIndex,
     restartDueto,
+    getGuessAcentuada, // Nova função exportada
   };
 };

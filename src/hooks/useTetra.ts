@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { LetterState, KeyboardKey } from '../types/game';
 import { api, removerAcentos } from '../utils/api';
+import { buscarPalavraAcentuada } from '../utils/accentCorrection';
 
 export interface TetraState {
   words: [string, string, string, string];
@@ -25,6 +26,9 @@ export const useTetra = (
     maxAttempts: 9,
     loading: false,
   });
+
+  // Novo estado para armazenar as versões acentuadas dos palpites
+  const [guessesAcentuadas, setGuessesAcentuadas] = useState<string[]>([]);
 
   const notify = (msg: string) => {
     if (showNotification) showNotification(msg);
@@ -59,6 +63,8 @@ export const useTetra = (
         loading: false,
       });
 
+      setGuessesAcentuadas([]); // Limpa as versões acentuadas
+
       // Dispara evento de início do jogo
       onGameEvent?.('gameStarted');
     } catch (error) {
@@ -68,45 +74,76 @@ export const useTetra = (
     }
   };
 
+  // Função para obter a versão acentuada de um palpite
+  const getGuessAcentuada = useCallback((index: number): string => {
+    if (index < guessesAcentuadas.length) {
+      return guessesAcentuadas[index];
+    }
+    // Fallback para a versão original se não tiver a acentuada
+    return tetraState.guesses[index] || '';
+  }, [guessesAcentuadas, tetraState.guesses]);
+
   const getLetterStates = useCallback((guess: string, word: string): LetterState[] => {
     if (!word) return [];
+    
+    // Encontra o índice deste palpite
+    const guessIndex = tetraState.guesses.indexOf(guess);
+    
+    // Se encontrou o índice, usa a versão acentuada para exibição
+    const displayGuess = guessIndex >= 0 ? getGuessAcentuada(guessIndex) : guess;
+    
     const result: LetterState[] = [];
     const wordArray = word.split('');
-    const guessArray = guess.split('');
+    const guessArray = guess.split(''); // Usa a versão original para lógica
+    const displayArray = displayGuess.split(''); // Usa a versão acentuada para exibição
+    
     const wordArraySemAcento = wordArray.map(removerAcentos);
     const guessArraySemAcento = guessArray.map(removerAcentos);
     const wordLetterCount: { [key: string]: number } = {};
+    
     wordArraySemAcento.forEach(letra => {
       wordLetterCount[letra] = (wordLetterCount[letra] || 0) + 1;
     });
+    
     // Primeiro: marca as letras corretas
     guessArraySemAcento.forEach((letra, index) => {
       if (letra === wordArraySemAcento[index]) {
-        result[index] = { letter: wordArray[index], status: 'correct' };
+        result[index] = { 
+          letter: displayArray[index] || guessArray[index], // Usa versão acentuada se disponível
+          status: 'correct' 
+        };
         wordLetterCount[letra]--;
       } else {
-        result[index] = { letter: guessArray[index], status: 'absent' };
+        result[index] = { 
+          letter: displayArray[index] || guessArray[index], // Usa versão acentuada se disponível
+          status: 'absent' 
+        };
       }
     });
+    
     // Segundo: marca as presentes na posição errada
     guessArraySemAcento.forEach((letra, index) => {
       if (result[index].status === 'absent' && wordLetterCount[letra] > 0) {
-        result[index] = { letter: guessArray[index], status: 'present' };
+        result[index] = { 
+          letter: displayArray[index] || guessArray[index], // Usa versão acentuada se disponível
+          status: 'present' 
+        };
         wordLetterCount[letra]--;
       }
     });
+    
     return result;
-  }, []);
+  }, [tetraState.guesses, getGuessAcentuada]);
 
   const getKeyboardStates = useCallback((): KeyboardKey[] => {
     const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     return alphabet.split('').map(letter => {
       const statusArr = tetraState.words.map(word => {
-        return tetraState.guesses.some(guess => getLetterStates(guess, word).some(ls => ls.letter === letter && ls.status === 'correct'))
+        return tetraState.guesses.some(guess => getLetterStates(guess, word).some(ls => removerAcentos(ls.letter) === letter && ls.status === 'correct'))
           ? 'correct'
-          : tetraState.guesses.some(guess => getLetterStates(guess, word).some(ls => ls.letter === letter && ls.status === 'present'))
+          : tetraState.guesses.some(guess => getLetterStates(guess, word).some(ls => removerAcentos(ls.letter) === letter && ls.status === 'present'))
           ? 'present'
-          : tetraState.guesses.some(guess => getLetterStates(guess, word).some(ls => ls.letter === letter && ls.status === 'absent'))
+          : tetraState.guesses.some(guess => getLetterStates(guess, word).some(ls => removerAcentos(ls.letter) === letter && ls.status === 'absent'))
           ? 'absent'
           : 'unused';
       });
@@ -160,7 +197,13 @@ export const useTetra = (
         onGameEvent?.('invalidWord');
         return;
       }
+
+      // Busca a versão acentuada da palavra antes de adicionar aos palpites
+      const palavraAcentuada = await buscarPalavraAcentuada(guessString);
+      
       const newGuesses = [...tetraState.guesses, guessString];
+      const newGuessesAcentuadas = [...guessesAcentuadas, palavraAcentuada];
+      
       const isGameOver = newGuesses.length >= tetraState.maxAttempts;
       
       // Verifica se o palpite não acertou nenhuma letra em nenhuma das palavras
@@ -187,6 +230,8 @@ export const useTetra = (
         selectedIndex: 0,
         status: newStatus,
       }));
+
+      setGuessesAcentuadas(newGuessesAcentuadas);
 
       // Eventos para palpites ruins
       if (isAllGray) {
@@ -244,5 +289,6 @@ export const useTetra = (
     submitGuess,
     selectIndex,
     restartTetra,
+    getGuessAcentuada, // Nova função exportada
   };
 };

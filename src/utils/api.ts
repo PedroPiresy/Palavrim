@@ -45,6 +45,57 @@ export const api = {
     }
   },
 
+  /**
+   * Nova função para buscar a versão acentuada de uma palavra
+   * @param palavra - Palavra sem acento para buscar a versão acentuada
+   * @returns Promise com a palavra acentuada ou null se não encontrar
+   */
+  async getPalavraAcentuada(palavra: string): Promise<string | null> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/palavra-acentuada/${encodeURIComponent(palavra.toLowerCase())}`);
+      if (!response.ok) {
+        if (response.status === 404) {
+          return null; // Palavra não encontrada
+        }
+        throw new Error('Erro ao buscar palavra acentuada');
+      }
+      const data = await response.json();
+      return data.palavra || null;
+    } catch (error) {
+      console.error('Erro na API getPalavraAcentuada:', error);
+      return null;
+    }
+  },
+
+  /**
+   * Busca múltiplas palavras acentuadas de uma vez
+   * @param palavras - Array de palavras para buscar acentuação
+   * @returns Promise com objeto mapeando palavra original -> palavra acentuada
+   */
+  async getPalavrasAcentuadas(palavras: string[]): Promise<Record<string, string>> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/palavras-acentuadas`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ palavras: palavras.map(p => p.toLowerCase()) }),
+      });
+      
+      if (!response.ok) throw new Error('Erro ao buscar palavras acentuadas');
+      const data = await response.json();
+      return data.palavras || {};
+    } catch (error) {
+      console.error('Erro na API getPalavrasAcentuadas:', error);
+      // Fallback: retorna as palavras originais
+      const fallback: Record<string, string> = {};
+      palavras.forEach(palavra => {
+        fallback[palavra.toLowerCase()] = palavra;
+      });
+      return fallback;
+    }
+  },
+
   async verificarPalavra(palavra: string): Promise<{ existe: boolean; estados: ('correct' | 'present' | 'absent')[] }> {
     try {
       // Verifica se existe no dicionário
