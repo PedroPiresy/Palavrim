@@ -345,7 +345,8 @@ export const useGame = (
     const newGuesses = [...gameState.guesses, guessString];
     const newGuessesAcentuadas = [...guessesAcentuadas, palavraAcentuada];
     
-    const isCorrect = resultado.estados.every(estado => estado === 'correct');
+    // CORREÇÃO: compara sem acento para definir vitória
+    const isCorrect = removerAcentos(guessString) === removerAcentos(gameState.word);
     const isGameOver = newGuesses.length >= gameState.maxAttempts;
     let newStatus: 'playing' | 'won' | 'lost' = 'playing';
     
