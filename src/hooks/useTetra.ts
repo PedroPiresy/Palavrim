@@ -214,7 +214,7 @@ export const useTetra = (
       
       const newStatus = tetraState.words.map((word, i) => {
         if (tetraState.status[i] !== 'playing') return tetraState.status[i];
-        if (guessString === word) return 'won';
+        if (removerAcentos(guessString) === removerAcentos(word)) return 'won';
         if (isGameOver) return 'lost';
         return 'playing';
       }) as TetraState['status'];

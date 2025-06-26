@@ -211,8 +211,9 @@ export const useDueto = (
       const newGuesses = [...duetoState.guesses, guessString];
       const newGuessesAcentuadas = [...guessesAcentuadas, palavraAcentuada];
       
-      const isCorrect1 = guessString === duetoState.word1;
-      const isCorrect2 = guessString === duetoState.word2;
+      // CORREÇÃO: compara sem acento para definir vitória
+      const isCorrect1 = removerAcentos(guessString) === removerAcentos(duetoState.word1);
+      const isCorrect2 = removerAcentos(guessString) === removerAcentos(duetoState.word2);
       const isGameOver = newGuesses.length >= duetoState.maxAttempts;
 
       // Verifica se o palpite não acertou nenhuma letra em nenhuma das palavras
