@@ -35,13 +35,11 @@ export const GameGrid: React.FC<GameGridProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Efeito para manter o foco no grid
   useEffect(() => {
     const gridElement = containerRef.current;
     if (gridElement) {
       gridElement.focus();
       
-      // Refocar o grid quando clicar em qualquer lugar da página
       const handleClick = () => {
         if (document.activeElement !== gridElement) {
           gridElement.focus();
@@ -57,18 +55,14 @@ export const GameGrid: React.FC<GameGridProps> = ({
 
   const getRowData = (rowIndex: number) => {
     if (rowIndex < guesses.length) {
-      // Linha com palpite confirmado
       return getLetterStates(guesses[rowIndex]);
     } else if (rowIndex === guesses.length) {
-      // Linha atual
       const currentLetters = currentGuess.map(letter => ({
         letter,
         status: 'empty' as const
       }));
-      // currentGuess já tem o tamanho correto
       return currentLetters;
     } else {
-      // Linhas vazias
       return Array(wordLength).fill(0).map(() => ({
         letter: '',
         status: 'empty' as const
@@ -106,14 +100,12 @@ export const GameGrid: React.FC<GameGridProps> = ({
       selectIndex(Math.min(selectedIndex + 1, wordLength - 1));
       e.preventDefault();
     } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-      // Mantém o foco no grid quando usar as setas
       e.preventDefault();
     }
   };
 
   return (
     <div className="flex flex-col items-center gap-2 sm:gap-4 w-full max-w-sm sm:max-w-none mx-auto">
-      {/* Cronômetro do Speed Run */}
       {isSpeedRun && (
         <div className="w-full flex justify-center">
           <Timer 
@@ -138,16 +130,13 @@ export const GameGrid: React.FC<GameGridProps> = ({
           
           return (
             <div key={rowIndex} className="flex gap-1 sm:gap-2 justify-center items-center">
-              {/* Mostra a caveira na última tentativa */}
               {isLastAttempt && isCurrentRow && (
                 <div className="w-6 sm:w-8 h-12 sm:h-14 flex items-center justify-center">
                   {shouldExplode ? (
                     <div className="relative">
-                      {/* Explosão da caveira */}
                       <div className="absolute inset-0 animate-explode">
                         <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full animate-explosion-core"></div>
                       </div>
-                      {/* Partículas da explosão */}
                       {Array.from({ length: 8 }).map((_, i) => (
                         <div
                           key={i}
@@ -190,7 +179,6 @@ export const GameGrid: React.FC<GameGridProps> = ({
                 );
               })}
 
-              {/* Espaço para a caveira do outro lado para manter o grid centrado */}
               {isLastAttempt && isCurrentRow && (
                 <div className="w-6 sm:w-8"></div>
               )}
@@ -202,7 +190,6 @@ export const GameGrid: React.FC<GameGridProps> = ({
   );
 };
 
-// CSS for animations
 const styles = `
 @keyframes explode {
   0% { transform: scale(1); opacity: 1; }

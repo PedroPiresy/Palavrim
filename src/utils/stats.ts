@@ -1,4 +1,3 @@
-// Interface para dados semanais do jogador
 export interface WeeklyData {
   weekStartDate: string;        // Data de início da semana (YYYY-MM-DD)
   gamesPlayed: number;          // Jogos jogados na semana
@@ -6,7 +5,6 @@ export interface WeeklyData {
   totalAttemptsOnWin: number;   // Total de tentativas nos jogos ganhos
 }
 
-// Interface principal com todas as estatísticas do jogador
 export interface GameStats {
   gamesPlayed: number;          // Total de jogos jogados
   gamesWon: number;             // Total de jogos ganhos
@@ -25,7 +23,6 @@ export interface GameStats {
   mana: number;                 // Mana atual (para modos especiais)
 }
 
-// Lista de todos os ranks/títulos possíveis no jogo
 export const ranks = [
   "Aprendiz de Letras",         // Nível 1-4
   "Iniciado das Sílabas",       // Nível 5-9
@@ -37,7 +34,6 @@ export const ranks = [
   "Avatar do Alfabeto",         // Nível 40+
 ];
 
-// Função que determina qual rank o jogador tem baseado no nível
 export const getRankForLevel = (level: number): string => {
   if (level >= 40) return ranks[7];  // Avatar do Alfabeto
   if (level >= 30) return ranks[6];  // Semideus da Semântica
@@ -49,13 +45,10 @@ export const getRankForLevel = (level: number): string => {
   return ranks[0];                   // Aprendiz de Letras
 };
 
-// Calcula quantos XP são necessários para o próximo nível
-// A fórmula usa uma progressão exponencial: 250 * nível^1.5
 export const getXpForNextLevel = (level: number): number => {
   return Math.floor(250 * Math.pow(level, 1.5));
 };
 
-// Cria estatísticas iniciais para um novo jogador
 export const getInitialStats = (): GameStats => {
   return {
     gamesPlayed: 0,
@@ -76,7 +69,6 @@ export const getInitialStats = (): GameStats => {
   };
 };
 
-// Carrega estatísticas salvas do localStorage
 export const loadStats = (): GameStats => {
   const initialStats = getInitialStats();
   const statsJson = localStorage.getItem('gameStats');
@@ -88,20 +80,16 @@ export const loadStats = (): GameStats => {
   return initialStats;
 };
 
-// Salva estatísticas no localStorage
 export const saveStats = (stats: GameStats) => {
   localStorage.setItem('gameStats', JSON.stringify(stats));
 };
 
-// Calcula XP ganho baseado no número de tentativas
-// Quanto menos tentativas, mais XP ganha
 export const calculateXpGained = (guesses: number): number => {
   const base_xp = 150;           // XP base por vitória
   const penalty = (guesses - 1) * 20; // Penalidade de 20 XP por tentativa extra
   return Math.max(20, base_xp - penalty); // Mínimo de 20 XP
 };
 
-// Função para aplicar XP e gerenciar subida de nível
 export const applyXp = (stats: GameStats, xpToAdd: number): { newStats: GameStats; leveledUp: boolean } => {
   const newStats = { ...stats, xp: stats.xp + xpToAdd };
 
@@ -126,14 +114,12 @@ export const applyXp = (stats: GameStats, xpToAdd: number): { newStats: GameStat
   return { newStats, leveledUp };
 };
 
-// Função para aplicar XP de vitória e gerenciar subida de nível
-const applyXpAndLevelUp = (stats: GameStats, guessCount: number): { newStats: GameStats; leveledUp: boolean, xpGained: number } => {
+export const applyXpAndLevelUp = (stats: GameStats, guessCount: number): { newStats: GameStats; leveledUp: boolean, xpGained: number } => {
   const xpGained = calculateXpGained(guessCount);
   const { newStats, leveledUp } = applyXp(stats, xpGained);
   return { newStats, leveledUp, xpGained };
 };
 
-// Atualiza estatísticas quando o jogador ganha (jogo completo)
 export const updateStatsOnWin = (stats: GameStats, guessCount: number): { newStats: GameStats; leveledUp: boolean, xpGained: number } => {
   const newStats = { ...stats };
   
@@ -164,13 +150,11 @@ export const updateStatsOnWin = (stats: GameStats, guessCount: number): { newSta
   return applyXpAndLevelUp(newStats, guessCount);
 };
 
-// Atualiza estatísticas ao vencer uma única palavra (Dueto/Tetra)
 export const updateStatsOnWordWin = (stats: GameStats, guessCount: number): { newStats: GameStats; leveledUp: boolean, xpGained: number } => {
   // Apenas dá XP, não mexe nas estatísticas de jogo (partidas, vitórias, etc.)
   return applyXpAndLevelUp(stats, guessCount);
 };
 
-// Atualiza estatísticas quando o jogador perde
 export const updateStatsOnLoss = (stats: GameStats): GameStats => {
   const newStats = { ...stats };
   newStats.gamesPlayed++;
@@ -186,7 +170,6 @@ export const updateStatsOnLoss = (stats: GameStats): GameStats => {
   return newStats;
 };
 
-// Atualiza a frequência de uso de cada letra
 export const updateLetterFrequency = (stats: GameStats, guess: string): GameStats => {
   const newStats = { ...stats };
   if (!newStats.letterFrequency) {
@@ -200,7 +183,6 @@ export const updateLetterFrequency = (stats: GameStats, guess: string): GameStat
   return newStats;
 };
 
-// Gerencia a evolução semanal das estatísticas
 export const updateWeeklyEvolution = (stats: GameStats): GameStats => {
   const newStats = { ...stats };
   if (!newStats.weeklyEvolution) {

@@ -25,11 +25,6 @@ export const Keyboard: React.FC<KeyboardProps> = ({
     ['Z', 'X', 'C', 'V', 'B', 'N', 'M', 'ENTER']
   ];
 
-  const getKeyState = (key: string) => {
-    const keyState = keyboardStates.find(k => k.key === key);
-    return keyState?.status || 'unused';
-  };
-
   const getKeyClass = (key: string, keyStatus: string) => {
     const baseClass = "h-14 sm:h-auto sm:py-4 rounded-lg font-mono transition-all duration-200 select-none cursor-pointer flex items-center justify-center";
     

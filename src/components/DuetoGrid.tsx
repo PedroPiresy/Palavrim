@@ -24,8 +24,6 @@ export const DuetoGrid: React.FC<DuetoGridProps> = ({
   getLetterStates,
   isCompleted,
   status,
-  title,
-  gridNumber,
   selectedIndex,
   selectIndex,
   isLastAttempt = false,

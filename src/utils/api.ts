@@ -2,7 +2,6 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 let palavraAtual: string = '';
 
-// Função para remover acentos em JS
 export function removerAcentos(texto: string): string {
   return texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 }
@@ -45,17 +44,12 @@ export const api = {
     }
   },
 
-  /**
-   * Nova função para buscar a versão acentuada de uma palavra
-   * @param palavra - Palavra sem acento para buscar a versão acentuada
-   * @returns Promise com a palavra acentuada ou null se não encontrar
-   */
   async getPalavraAcentuada(palavra: string): Promise<string | null> {
     try {
       const response = await fetch(`${API_BASE_URL}/palavra-acentuada/${encodeURIComponent(palavra.toLowerCase())}`);
       if (!response.ok) {
         if (response.status === 404) {
-          return null; // Palavra não encontrada
+          return null;
         }
         throw new Error('Erro ao buscar palavra acentuada');
       }
@@ -67,11 +61,6 @@ export const api = {
     }
   },
 
-  /**
-   * Busca múltiplas palavras acentuadas de uma vez
-   * @param palavras - Array de palavras para buscar acentuação
-   * @returns Promise com objeto mapeando palavra original -> palavra acentuada
-   */
   async getPalavrasAcentuadas(palavras: string[]): Promise<Record<string, string>> {
     try {
       const response = await fetch(`${API_BASE_URL}/palavras-acentuadas`, {

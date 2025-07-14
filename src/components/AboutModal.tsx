@@ -55,15 +55,6 @@ export const AboutModal: React.FC<AboutModalProps> = ({ isOpen, onClose }) => {
                 <Github size={16} />
                 Visite meu perfil no GitHub
               </a>
-              <a 
-                href="https://github.com/PedroPiresy/Palavrim" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="w-full inline-flex items-center justify-center gap-2 text-purple-300 hover:text-white transition-colors bg-purple-900/50 hover:bg-purple-800/70 border border-purple-700 hover:border-purple-600 px-4 py-2 rounded-lg"
-              >
-                <Github size={16} />
-                Veja o repositório do projeto
-              </a>
             </div>
           </div>
         </div>

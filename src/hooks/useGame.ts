@@ -25,7 +25,6 @@ export const useGame = (
   const [speedRunTime, setSpeedRunTime] = useState(0);
   const [isSpeedRunActive, setIsSpeedRunActive] = useState(false);
   
-  // Novo estado para armazenar as versões acentuadas dos palpites
   const [guessesAcentuadas, setGuessesAcentuadas] = useState<string[]>([]);
 
   const notify = (msg: string) => {
@@ -51,7 +50,7 @@ export const useGame = (
       setSelectedIndex(0);
       setSpeedRunTime(0);
       setIsSpeedRunActive(false);
-      setGuessesAcentuadas([]); // Limpa as versões acentuadas
+      setGuessesAcentuadas([]);
     } catch (error) {
       console.error('Erro ao inicializar jogo:', error);
       notify('Erro ao carregar jogo. Usando modo offline.');
@@ -60,7 +59,6 @@ export const useGame = (
     }
   };
 
-  // Iniciar modo speed run
   const startSpeedRun = async () => {
     setLoading(true);
     try {
@@ -80,7 +78,7 @@ export const useGame = (
       setSelectedIndex(0);
       setSpeedRunTime(0);
       setIsSpeedRunActive(false);
-      setGuessesAcentuadas([]); // Limpa as versões acentuadas
+      setGuessesAcentuadas([]);
     } catch (error) {
       console.error('Erro ao iniciar speed run:', error);
       notify('Erro ao iniciar speed run. Usando modo offline.');
@@ -93,35 +91,29 @@ export const useGame = (
     setIsSpeedRunActive(true);
   }, []);
 
-  // Atualizar tempo do speed run
   const updateSpeedRunTime = (time: number) => {
     setSpeedRunTime(time);
   };
 
-  // Função para obter a versão acentuada de um palpite
   const getGuessAcentuada = useCallback((index: number): string => {
     if (index < guessesAcentuadas.length) {
       return guessesAcentuadas[index];
     }
-    // Fallback para a versão original se não tiver a acentuada
     return gameState.guesses[index] || '';
   }, [guessesAcentuadas, gameState.guesses]);
 
-  // Obter estado das letras para um palpite (usando versão acentuada para exibição)
   const getLetterStates = useCallback((guess: string): LetterState[] => {
     const { word } = gameState;
     if (!word) return [];
     
-    // Encontra o índice deste palpite
     const guessIndex = gameState.guesses.indexOf(guess);
     
-    // Se encontrou o índice, usa a versão acentuada para exibição
     const displayGuess = guessIndex >= 0 ? getGuessAcentuada(guessIndex) : guess;
     
     const result: LetterState[] = [];
     const wordArray = word.split('');
-    const guessArray = guess.split(''); // Usa a versão original para lógica
-    const displayArray = displayGuess.split(''); // Usa a versão acentuada para exibição
+    const guessArray = guess.split('');
+    const displayArray = displayGuess.split('');
     
     const wordArraySemAcento = wordArray.map(removerAcentos);
     const guessArraySemAcento = guessArray.map(removerAcentos);
@@ -131,27 +123,25 @@ export const useGame = (
       wordLetterCount[letra] = (wordLetterCount[letra] || 0) + 1;
     });
     
-    // Primeiro: marca as letras corretas
     guessArraySemAcento.forEach((letra, index) => {
       if (letra === wordArraySemAcento[index]) {
         result[index] = { 
-          letter: displayArray[index] || guessArray[index], // Usa versão acentuada se disponível
+          letter: displayArray[index] || guessArray[index],
           status: 'correct' 
         };
         wordLetterCount[letra]--;
       } else {
         result[index] = { 
-          letter: displayArray[index] || guessArray[index], // Usa versão acentuada se disponível
+          letter: displayArray[index] || guessArray[index],
           status: 'absent' 
         };
       }
     });
     
-    // Segundo: marca as presentes na posição errada
     guessArraySemAcento.forEach((letra, index) => {
       if (result[index].status === 'absent' && wordLetterCount[letra] > 0) {
         result[index] = { 
-          letter: displayArray[index] || guessArray[index], // Usa versão acentuada se disponível
+          letter: displayArray[index] || guessArray[index],
           status: 'present' 
         };
         wordLetterCount[letra]--;
@@ -186,13 +176,11 @@ export const useGame = (
     return hasPresent && hasCorrect;
   }, [getLetterStates]);
 
-  // Obter estado do teclado
   const getKeyboardStates = useCallback((): KeyboardKey[] => {
     const keyStates: { [key: string]: 'correct' | 'present' | 'absent' | 'unused' } = {};
     gameState.guesses.forEach(guess => {
       const letterStates = getLetterStates(guess);
       letterStates.forEach(({ letter, status }) => {
-        // Remove acentos da letra para comparação no teclado
         const letterSemAcento = removerAcentos(letter);
         if (status === 'correct') {
           keyStates[letterSemAcento] = 'correct';
@@ -268,7 +256,6 @@ export const useGame = (
     setSelectedIndex(Math.min(index + 1, wordLength - 1));
   };
 
-  // Adicionar letra na posição selecionada
   const addLetter = (letter: string) => {
     if (gameState.gameStatus !== 'playing') return;
     let guessArr = [...gameState.currentGuess];
@@ -298,7 +285,6 @@ export const useGame = (
     setSelectedIndex(idx => Math.min(idx + 1, wordLength - 1));
   };
 
-  // Remover letra da posição selecionada
   const removeLetter = () => {
     if (gameState.gameStatus !== 'playing') return;
     let guessArr = [...gameState.currentGuess];
@@ -310,13 +296,11 @@ export const useGame = (
     setSelectedIndex(idx => Math.max(idx - 1, 0));
   };
 
-  // Selecionar célula
   const selectIndex = (index: number) => {
     if (gameState.gameStatus !== 'playing') return;
     setSelectedIndex(index);
   };
 
-  // Submeter palpite
   const submitGuess = async () => {
     if (gameState.gameStatus !== 'playing') return;
     const guessString = gameState.currentGuess.join('');
@@ -339,13 +323,11 @@ export const useGame = (
       return;
     }
 
-    // Busca a versão acentuada da palavra antes de adicionar aos palpites
     const palavraAcentuada = await buscarPalavraAcentuada(guessString);
     
     const newGuesses = [...gameState.guesses, guessString];
     const newGuessesAcentuadas = [...guessesAcentuadas, palavraAcentuada];
     
-    // CORREÇÃO: compara sem acento para definir vitória
     const isCorrect = removerAcentos(guessString) === removerAcentos(gameState.word);
     const isGameOver = newGuesses.length >= gameState.maxAttempts;
     let newStatus: 'playing' | 'won' | 'lost' = 'playing';
@@ -380,7 +362,6 @@ export const useGame = (
     setSelectedIndex(0);
   };
 
-  // Formatar tempo para exibição
   const formatTime = (ms: number): string => {
     const minutes = Math.floor(ms / 60000);
     const seconds = Math.floor((ms % 60000) / 1000);
@@ -389,7 +370,6 @@ export const useGame = (
     return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${centiseconds.toString().padStart(2, '0')}`;
   };
 
-  // Reiniciar jogo
   const restartGame = () => {
     if (gameState.isSpeedRun) {
       startSpeedRun();
@@ -423,6 +403,6 @@ export const useGame = (
     isSpeedRunActive,
     speedRunTime,
     formatTime,
-    getGuessAcentuada, // Nova função exportada
+    getGuessAcentuada,
   };
 };

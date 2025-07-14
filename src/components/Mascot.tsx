@@ -10,26 +10,24 @@ export const Mascot: React.FC<MascotProps> = ({ message, isCastingSpell = false 
   const [isFloating, setIsFloating] = useState(true);
   const [sparkles, setSparkles] = useState<Array<{ id: number; x: number; y: number; delay: number }>>([]);
 
-  // Efeito de piscar aleatório
   useEffect(() => {
     const blinkInterval = setInterval(() => {
-      if (Math.random() < 0.3) { // 30% de chance de piscar
+      if (Math.random() < 0.3) {
         setIsBlinking(true);
         setTimeout(() => setIsBlinking(false), 150);
       }
-    }, 2000 + Math.random() * 3000); // Entre 2-5 segundos
+    }, 2000 + Math.random() * 3000);
 
     return () => clearInterval(blinkInterval);
   }, []);
 
-  // Gerar partículas mágicas ao redor do mascote
   useEffect(() => {
     const generateSparkles = () => {
       const newSparkles = Array.from({ length: 6 }, (_, i) => ({
         id: Date.now() + i,
-        x: Math.random() * 100 - 50, // -50px a +50px
+        x: Math.random() * 100 - 50,
         y: Math.random() * 100 - 50,
-        delay: Math.random() * 2000, // 0-2s delay
+        delay: Math.random() * 2000,
       }));
       setSparkles(newSparkles);
     };
@@ -40,7 +38,6 @@ export const Mascot: React.FC<MascotProps> = ({ message, isCastingSpell = false 
     return () => clearInterval(sparkleInterval);
   }, []);
 
-  // Parar flutuação durante feitiço
   useEffect(() => {
     if (isCastingSpell) {
       setIsFloating(false);
@@ -50,17 +47,13 @@ export const Mascot: React.FC<MascotProps> = ({ message, isCastingSpell = false 
 
   return (
     <div className="hidden sm:flex fixed bottom-16 sm:bottom-20 right-4 sm:right-8 flex-col items-center gap-1 sm:gap-2 z-20">
-      {/* Balão de fala melhorado */}
       <div className="relative bg-gradient-to-br from-[#2d2d2d] to-[#1a1a1a] border-2 border-purple-600 p-2 sm:p-3 rounded-lg rounded-br-none shadow-xl max-w-[200px] sm:max-w-xs animate-fade-in-bounce backdrop-blur-sm">
-        {/* Brilho interno do balão */}
         <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-transparent rounded-lg rounded-br-none pointer-events-none"></div>
         
-        {/* Texto da mensagem */}
         <p className="relative text-xs sm:text-sm text-purple-200 font-mono text-center leading-relaxed">
           {message}
         </p>
         
-        {/* Indicador de digitação quando não há mensagem */}
         {!message && (
           <div className="flex space-x-1 justify-center">
             <div className="w-2 h-2 bg-purple-400 rounded-full animate-typing-dot"></div>
@@ -69,21 +62,16 @@ export const Mascot: React.FC<MascotProps> = ({ message, isCastingSpell = false 
           </div>
         )}
 
-        {/* Pequenos detalhes mágicos no balão */}
         <div className="absolute top-1 right-1 w-1 h-1 bg-purple-400 rounded-full animate-pulse"></div>
         <div className="absolute bottom-1 left-1 w-0.5 h-0.5 bg-cyan-400 rounded-full animate-pulse" style={{ animationDelay: '1s' }}></div>
       </div>
 
-      {/* Container do mascote com efeitos */}
       <div className="relative">
-        {/* Aura mágica ao redor do mascote */}
         <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-full blur-lg animate-pulse-slow"></div>
         
-        {/* Círculo de energia */}
         <div className="absolute inset-0 border-2 border-purple-400/30 rounded-full animate-spin-slow"></div>
         <div className="absolute inset-1 border border-cyan-400/20 rounded-full animate-spin-reverse"></div>
 
-        {/* Mascote principal */}
         <img 
           src="/assets/images/Palavrim.png" 
           alt="Mascote Mago"
@@ -96,7 +84,6 @@ export const Mascot: React.FC<MascotProps> = ({ message, isCastingSpell = false 
           }`}
         />
 
-        {/* Partículas mágicas ao redor */}
         {sparkles.map((sparkle) => (
           <div
             key={sparkle.id}
@@ -110,20 +97,15 @@ export const Mascot: React.FC<MascotProps> = ({ message, isCastingSpell = false 
           />
         ))}
 
-        {/* Efeito de energia no chão */}
         <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-8 h-1 bg-gradient-to-r from-transparent via-purple-400/50 to-transparent rounded-full animate-energy-pulse"></div>
       </div>
       
-      {/* Feitiço voando melhorado */}
       {isCastingSpell && (
         <div className="fixed inset-0 pointer-events-none z-30">
-          {/* Feitiço principal */}
           <div className="absolute bottom-16 sm:bottom-20 right-4 sm:right-8 w-4 h-4 sm:w-6 sm:h-6 bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 rounded-full animate-spell-flight-enhanced shadow-lg">
-            {/* Rastro do feitiço */}
             <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full animate-spell-trail"></div>
           </div>
           
-          {/* Partículas do feitiço */}
           {Array.from({ length: 8 }).map((_, i) => (
             <div
               key={i}
@@ -140,9 +122,7 @@ export const Mascot: React.FC<MascotProps> = ({ message, isCastingSpell = false 
   );
 };
 
-// CSS para todas as animações
 const styles = `
-/* Animação de entrada do balão */
 @keyframes fade-in-bounce {
   0% { 
     opacity: 0; 
@@ -158,7 +138,6 @@ const styles = `
   }
 }
 
-/* Flutuação suave do mascote */
 @keyframes float-gentle {
   0%, 100% { 
     transform: translateY(0px) rotate(0deg); 
@@ -174,7 +153,6 @@ const styles = `
   }
 }
 
-/* Animação de lançar feitiço melhorada */
 @keyframes cast-spell-enhanced {
   0% { 
     transform: scale(1) rotate(0deg); 
@@ -202,7 +180,6 @@ const styles = `
   }
 }
 
-/* Animação de piscar */
 @keyframes blink {
   0%, 90%, 100% { 
     filter: brightness(1); 
@@ -212,19 +189,16 @@ const styles = `
   }
 }
 
-/* Rotação lenta da aura */
 @keyframes spin-slow {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
 
-/* Rotação reversa */
 @keyframes spin-reverse {
   from { transform: rotate(360deg); }
   to { transform: rotate(0deg); }
 }
 
-/* Pulso lento da aura */
 @keyframes pulse-slow {
   0%, 100% { 
     opacity: 0.3; 
@@ -236,7 +210,6 @@ const styles = `
   }
 }
 
-/* Partículas mágicas */
 @keyframes sparkle {
   0% { 
     opacity: 0; 
@@ -256,7 +229,6 @@ const styles = `
   }
 }
 
-/* Energia no chão */
 @keyframes energy-pulse {
   0%, 100% { 
     opacity: 0.3; 
@@ -268,7 +240,6 @@ const styles = `
   }
 }
 
-/* Feitiço voando melhorado */
 @keyframes spell-flight-enhanced {
   0% { 
     transform: translate(0, 0) scale(1) rotate(0deg);
@@ -297,7 +268,6 @@ const styles = `
   }
 }
 
-/* Rastro do feitiço */
 @keyframes spell-trail {
   0% { 
     transform: scale(1); 
@@ -313,7 +283,6 @@ const styles = `
   }
 }
 
-/* Partículas do feitiço */
 @keyframes spell-particles {
   0% { 
     transform: translate(0, 0) scale(1);
@@ -328,7 +297,6 @@ const styles = `
   }
 }
 
-/* Indicador de digitação */
 @keyframes typing-dot {
   0%, 60%, 100% {
     transform: translateY(0);
@@ -340,7 +308,6 @@ const styles = `
   }
 }
 
-/* Classes CSS */
 .animate-fade-in-bounce {
   animation: fade-in-bounce 0.6s ease-out forwards;
 }
@@ -394,7 +361,6 @@ const styles = `
 }
 `;
 
-// Adiciona os estilos ao documento
 const styleSheet = document.createElement("style");
 styleSheet.type = "text/css";
 styleSheet.innerText = styles;
