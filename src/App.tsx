@@ -1,22 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { GameHeader } from './components/GameHeader';
-import { GameGrid } from './components/GameGrid';
+import { ModernHeader } from './components/ModernHeader';
+import { ModernGameGrid } from './components/ModernGameGrid';
 import { DuetoGrid } from './components/DuetoGrid';
 import { TetraGrid } from './components/TetraGrid';
-import { Keyboard } from './components/Keyboard';
-import { Spellbook } from './components/Spellbook';
+import { ModernKeyboard } from './components/ModernKeyboard';
+import { ModernSpellbook } from './components/ModernSpellbook';
 import { HelpModal } from './components/HelpModal';
 import { SpeedRunHelpModal } from './components/SpeedRunHelpModal';
 import { DuetoHelpModal } from './components/DuetoHelpModal';
 import { TetraHelpModal } from './components/TetraHelpModal';
 import { StatsModal } from './components/StatsModal';
-import { Notification } from './components/Notification';
+import { ModernNotification } from './components/ModernNotification';
 import { useGame, GameEvent } from './hooks/useGame';
 import { useDueto } from './hooks/useDueto';
 import { useTetra } from './hooks/useTetra';
 import { Loader2, Home, Play, BookOpen, BarChartHorizontal } from 'lucide-react';
 import { api } from './utils/api';
-import PalavrimLayout from './components/PalavrimLayout';
 import { Routes, Route, useNavigate } from 'react-router-dom';
 import NotFound from './NotFound';
 import {
@@ -33,7 +32,7 @@ import {
   getRankForLevel,
 } from './utils/stats';
 import { getMascotMessage, MessageType } from './utils/mascotMessages';
-import { Mascot } from './components/Mascot';
+import { ModernMascot } from './components/ModernMascot';
 import { useTour } from '@reactour/tour';
 import { AboutModal } from './components/AboutModal';
 import { Countdown } from './components/Countdown';
@@ -41,10 +40,13 @@ import { Countdown } from './components/Countdown';
 function App() {
   const [notification, setNotification] = useState<string>('');
   const [notificationKey, setNotificationKey] = useState(0);
-  const showNotification = (message: string) => {
+  const [notificationType, setNotificationType] = useState<'success' | 'error' | 'info'>('info');
+  
+  const showNotification = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
     setNotification(message);
+    setNotificationType(type);
     setNotificationKey(prev => prev + 1);
-    setTimeout(() => setNotification(''), 1600);
+    setTimeout(() => setNotification(''), 2200);
   };
 
   const [mascotMessage, setMascotMessage] = useState<string>('');
@@ -197,7 +199,7 @@ function App() {
       };
       setStats(updatedStats);
       saveStats(updatedStats);
-      showNotification(`✨ +${manaToAdd} de Mana por seu retorno!`);
+      showNotification(`✨ +${manaToAdd} de Mana por seu retorno!`, 'success');
     } else {
       setStats(stats);
       saveStats(stats);
@@ -315,11 +317,11 @@ function App() {
       } else if (command === 'admin') {
         sairModoComando();
         if (modo === 'abracadupla') {
-          showNotification(`Respostas: ${duetoState.word1}, ${duetoState.word2}`);
+          showNotification(`Respostas: ${duetoState.word1}, ${duetoState.word2}`, 'info');
         } else if (modo === 'abracatetra') {
-          showNotification(`Respostas: ${tetraState.words.join(', ')}`);
+          showNotification(`Respostas: ${tetraState.words.join(', ')}`, 'info');
         } else {
-          showNotification(`Resposta: ${palavraCorreta}`);
+          showNotification(`Resposta: ${palavraCorreta}`, 'info');
         }
       } else if (command === 'magiaadmin') {
         sairModoComando();
@@ -328,7 +330,7 @@ function App() {
             saveStats(newStats);
             return newStats;
         });
-        showNotification('🔮 Mana restaurada para o máximo!');
+        showNotification('🔮 Mana restaurada para o máximo!', 'success');
       } else if (command.startsWith('xpadmin')) {
         sairModoComando();
         const parts = command.split(' ');
@@ -338,14 +340,14 @@ function App() {
             const { newStats, leveledUp } = applyXp(prevStats, xpAmount);
             if (leveledUp) {
               setTimeout(() => {
-                  showNotification(`🎉 Nível ${newStats.level}! ${newStats.rank}! +50 de Mana!`);
+                  showNotification(`🎉 Nível ${newStats.level}! ${newStats.rank}! +50 de Mana!`, 'success');
                   triggerMascotMessage('levelUp', newStats.rank);
               }, 500);
             }
             saveStats(newStats);
             return newStats;
         });
-        showNotification(`⭐ +${xpAmount} de XP adicionados!`);
+        showNotification(`⭐ +${xpAmount} de XP adicionados!`, 'success');
       } else if (command === 'resetxp') {
         sairModoComando();
         setStats(prevStats => {
@@ -358,7 +360,7 @@ function App() {
           saveStats(newStats);
           return newStats;
         });
-        showNotification('🔄 XP e Nível foram resetados!');
+        showNotification('🔄 XP e Nível foram resetados!', 'info');
       }
     } else if (e.key === 'Escape') {
       sairModoComando();
@@ -435,10 +437,10 @@ function App() {
       // Atualiza estatísticas do jogador
       setStats(prevStats => {
         const { newStats, leveledUp, xpGained } = updateStatsOnWin(prevStats, guessCount);
-        showNotification(`+${xpGained} XP!`);
+        showNotification(`+${xpGained} XP!`, 'success');
         if (leveledUp) {
             setTimeout(() => {
-                showNotification(`🎉 Nível ${newStats.level}! ${newStats.rank}! +50 de Mana!`);
+                showNotification(`🎉 Nível ${newStats.level}! ${newStats.rank}! +50 de Mana!`, 'success');
                 triggerMascotMessage('levelUp', newStats.rank);
             }, 1800);
         }
@@ -491,10 +493,10 @@ function App() {
   const handleWordWin = (guessCount: number) => {
     setStats(prevStats => {
       const { newStats, leveledUp, xpGained } = updateStatsOnWordWin(prevStats, guessCount);
-      showNotification(`+${xpGained} XP!`);
+      showNotification(`+${xpGained} XP!`, 'success');
       if (leveledUp) {
         setTimeout(() => {
-          showNotification(`🎉 Nível ${newStats.level}! ${newStats.rank}! +50 de Mana!`);
+          showNotification(`🎉 Nível ${newStats.level}! ${newStats.rank}! +50 de Mana!`, 'success');
           triggerMascotMessage('levelUp', newStats.rank);
         }, 1000);
       }
@@ -533,13 +535,13 @@ function App() {
   const castRevealLetterSpell = () => {
     const cost = 25;
     if (stats.mana < cost || revealSpellUses >= 2 || gameState.gameStatus !== 'playing') {
-      showNotification('Não é possível lançar o feitiço agora.');
+      showNotification('Não é possível lançar o feitiço agora.', 'error');
       return;
     }
 
     const position = getRevealablePosition();
     if (position === null) {
-      showNotification('Todas as letras possíveis já foram reveladas ou adivinhadas!');
+      showNotification('Todas as letras possíveis já foram reveladas ou adivinhadas!', 'info');
       return;
     }
 
@@ -551,7 +553,7 @@ function App() {
 
     const letterToReveal = palavraCorreta[position];
     revealLetterInGrid(letterToReveal, position);
-    showNotification(`🔮 Feitiço lançado! Uma letra foi revelada no grid.`);
+    showNotification(`🔮 Feitiço lançado! Uma letra foi revelada no grid.`, 'success');
   };
 
   // Efeito para registrar a frequência de letras após cada palpite
@@ -571,12 +573,17 @@ function App() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#1a1a1a] flex items-center justify-center">
-        <div className="text-center space-y-4">
+      <div className="min-h-screen bg-[var(--bg-primary)] flex items-center justify-center">
+        <div className="text-center space-y-6">
           <div className="flex items-center justify-center">
-            <img src="/assets/images/Palavrim.png" alt="Palavrim" className="w-12 h-12 sm:w-16 sm:h-16 animate-pulse" />
+            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[var(--accent-blue)] to-[var(--accent-blue-hover)] flex items-center justify-center animate-pulse">
+              <img src="/assets/images/Palavrim.png" alt="Palavrim" className="w-10 h-10" />
+            </div>
           </div>
-          <p className="text-[#d0d0d0] text-base sm:text-lg font-mono">Carregando Palavrim...</p>
+          <div className="space-y-2">
+            <h2 className="text-2xl font-bold text-gradient">Palavrim</h2>
+            <p className="text-[var(--text-secondary)]">Carregando...</p>
+          </div>
         </div>
       </div>
     );
@@ -637,41 +644,39 @@ function App() {
     <Routes>
       <Route path="/notfound" element={<NotFound />} />
       <Route path="/*" element={
-        <PalavrimLayout>
-            <GameHeader
-              onShowHelp={() => setShowHelp(true)}
-              onShowStats={() => {
-                setStats(loadStats());
-                setShowStats(true);
-              }}
-              onShowAbout={() => setShowAbout(true)}
-              onDueto={iniciarDueto}
-              onQuarteto={iniciarTetra}
-              onHome={voltarParaNormal}
-              onSpeedRun={iniciarSpeedRun}
+        <div className="min-h-screen bg-[var(--bg-primary)] flex flex-col">
+          <ModernHeader
+            onShowHelp={() => setShowHelp(true)}
+            onShowStats={() => {
+              setStats(loadStats());
+              setShowStats(true);
+            }}
+            onShowAbout={() => setShowAbout(true)}
+            onDueto={iniciarDueto}
+            onQuarteto={iniciarTetra}
+            onHome={voltarParaNormal}
+            onSpeedRun={iniciarSpeedRun}
             stats={stats}
             mode={modo}
             isVimMode={modoComando}
-            />
-          <main className="flex-1 flex flex-col items-center justify-center gap-2 sm:gap-4 max-w-7xl mx-auto w-full px-2 sm:px-4">
+          />
+          
+          <main className="flex-1 flex flex-col items-center justify-center gap-8 max-w-7xl mx-auto w-full px-4 py-8">
             {countdown !== null && <Countdown count={countdown} />}
             
             {notification && (
-              <div className="w-full flex justify-center mb-2 sm:mb-4">
-                <Notification
+              <div className="fixed top-20 right-4 z-40">
+                <ModernNotification
                   key={notificationKey}
                   message={notification}
-                  type={
-                    notification.includes('Erro') || notification.includes('pena') || notification.includes('😔') ? 'error' :
-                    (notification.includes('Parabéns') || notification.includes('🎉') ? 'success' : 'info')
-                  }
+                  type={notificationType}
                 />
               </div>
             )}
             
             <div className="w-full flex flex-col items-center justify-center">
               {modo === 'abracadupla' ? (
-                <div className="flex flex-col md:flex-row gap-4 md:gap-8 items-center justify-center w-full">
+                <div className="flex flex-col lg:flex-row gap-8 items-center justify-center w-full">
                   <DuetoGrid
                     guesses={duetoState.guesses}
                     currentGuess={duetoState.currentGuess}
@@ -702,7 +707,7 @@ function App() {
                   />
                 </div>
               ) : modo === 'abracatetra' ? (
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 w-full max-w-7xl mx-auto">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 w-full max-w-7xl mx-auto">
                   {tetraState.words.map((word, idx) => (
                     <TetraGrid
                       key={idx}
@@ -722,7 +727,7 @@ function App() {
                   ))}
                 </div>
               ) : (
-                <GameGrid
+                <ModernGameGrid
                   guesses={gameState.guesses}
                   currentGuess={gameState.currentGuess}
                   wordLength={wordLength}
@@ -741,7 +746,7 @@ function App() {
             </div>
             
             {modo === 'normal' && gameState.gameStatus === 'playing' && (
-              <Spellbook 
+              <ModernSpellbook 
                 onCastRevealLetter={castRevealLetterSpell}
                 canCastRevealLetter={getRevealablePosition() !== null}
                 mana={stats.mana}
@@ -749,7 +754,7 @@ function App() {
               />
             )}
             
-            <Keyboard
+            <ModernKeyboard
               keyboardStates={getCurrentKeyboardStates()}
               onKeyPress={getCurrentAddLetter()}
               onDelete={getCurrentRemoveLetter()}
@@ -760,35 +765,35 @@ function App() {
 
             {/* Modal de vitória/derrota para modo dueto */}
             {modo === 'abracadupla' && (duetoState.status1 !== 'playing' && duetoState.status2 !== 'playing') && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-                <div className="p-4 sm:p-6 bg-[#2d2d2d] rounded-lg border border-[#3d3d3d] shadow-xl min-w-[280px] sm:min-w-[320px] max-w-full flex flex-col items-center">
-                  <div className="space-y-2 text-center">
-                    <h3 className="text-xl sm:text-2xl font-bold text-[#8b5cf6] font-mono flex items-center justify-center gap-2">
+              <div className="fixed inset-0 z-50 flex items-center justify-center modal-backdrop">
+                <div className="card-elevated p-6 rounded-2xl min-w-[320px] max-w-md w-full mx-4 animate-scale-in">
+                  <div className="space-y-4 text-center">
+                    <h3 className="text-2xl font-bold text-gradient">
                       Abracadupla finalizado!
                     </h3>
-                    <div className="space-y-1">
-                      <p className="text-sm sm:text-base text-[#d0d0d0] font-mono">
-                        Palavra 1: <span onClick={() => fetchMeaning(duetoState.word1)} className="font-bold text-[#4ade80] cursor-pointer hover:underline">{duetoState.word1}</span> - {duetoState.status1 === 'won' ? '✅ Acertou!' : '❌ Errou!'}
+                    <div className="space-y-2">
+                      <p className="text-[var(--text-primary)]">
+                        Palavra 1: <span onClick={() => fetchMeaning(duetoState.word1)} className="font-bold text-[var(--success)] cursor-pointer hover:underline">{duetoState.word1}</span> - {duetoState.status1 === 'won' ? '✅ Acertou!' : '❌ Errou!'}
                       </p>
-                      <p className="text-sm sm:text-base text-[#d0d0d0] font-mono">
-                        Palavra 2: <span onClick={() => fetchMeaning(duetoState.word2)} className="font-bold text-[#4ade80] cursor-pointer hover:underline">{duetoState.word2}</span> - {duetoState.status2 === 'won' ? '✅ Acertou!' : '❌ Errou!'}
+                      <p className="text-[var(--text-primary)]">
+                        Palavra 2: <span onClick={() => fetchMeaning(duetoState.word2)} className="font-bold text-[var(--success)] cursor-pointer hover:underline">{duetoState.word2}</span> - {duetoState.status2 === 'won' ? '✅ Acertou!' : '❌ Errou!'}
                       </p>
                     </div>
-                    <p className="text-xs text-slate-400 font-mono pt-2">(Clique na palavra para ver o significado)</p>
+                    <p className="text-xs text-[var(--text-secondary)]">(Clique na palavra para ver o significado)</p>
                   </div>
-                  <div className="flex flex-col gap-2 w-full mt-4">
+                  <div className="flex flex-col gap-3 mt-6">
                     <button
                       onClick={restartDueto}
-                      className="w-full py-2 sm:py-3 px-4 sm:px-5 rounded-lg bg-[#8b5cf6] text-white font-bold text-sm sm:text-base hover:bg-[#6d28d9] transition-all duration-200 flex items-center justify-center gap-2"
+                      className="btn-primary py-3 px-5 rounded-xl font-semibold flex items-center justify-center gap-2"
                     >
-                      <Play size={16} className="sm:w-[18px] sm:h-[18px]" />
+                      <Play size={16} />
                       Jogar Novamente
                     </button>
                     <button
                       onClick={voltarParaNormal}
-                      className="w-full py-2 sm:py-3 px-4 sm:px-5 rounded-lg bg-[#2d2d2d] text-[#d0d0d0] font-bold text-sm sm:text-base hover:bg-[#3d3d3d] border border-[#3d3d3d] hover:border-[#8b5cf6] transition-all duration-200 flex items-center justify-center gap-2"
+                      className="btn-secondary py-3 px-5 rounded-xl font-semibold flex items-center justify-center gap-2"
                     >
-                      <Home size={16} className="sm:w-[18px] sm:h-[18px]" />
+                      <Home size={16} />
                       Modo Normal
                     </button>
                   </div>
@@ -798,34 +803,34 @@ function App() {
 
             {/* Modal de vitória/derrota para modo abracatetra */}
             {modo === 'abracatetra' && tetraState.status.every(s => s !== 'playing') && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-                <div className="p-4 sm:p-6 bg-[#2d2d2d] rounded-lg border border-[#3d3d3d] shadow-xl min-w-[280px] sm:min-w-[320px] max-w-full flex flex-col items-center">
-                  <div className="space-y-2 text-center">
-                    <h3 className="text-xl sm:text-2xl font-bold text-[#8b5cf6] font-mono flex items-center justify-center gap-2">
+              <div className="fixed inset-0 z-50 flex items-center justify-center modal-backdrop">
+                <div className="card-elevated p-6 rounded-2xl min-w-[320px] max-w-md w-full mx-4 animate-scale-in">
+                  <div className="space-y-4 text-center">
+                    <h3 className="text-2xl font-bold text-gradient">
                       Abracatetra finalizado!
                     </h3>
-                    <div className="space-y-1">
+                    <div className="space-y-2">
                       {tetraState.words.map((word, idx) => (
-                        <p key={idx} className="text-sm sm:text-base text-[#d0d0d0] font-mono">
-                          Palavra {idx + 1}: <span onClick={() => fetchMeaning(word)} className="font-bold text-[#4ade80] cursor-pointer hover:underline">{word}</span> - {tetraState.status[idx] === 'won' ? '✅ Acertou!' : '❌ Errou!'}
+                        <p key={idx} className="text-[var(--text-primary)]">
+                          Palavra {idx + 1}: <span onClick={() => fetchMeaning(word)} className="font-bold text-[var(--success)] cursor-pointer hover:underline">{word}</span> - {tetraState.status[idx] === 'won' ? '✅ Acertou!' : '❌ Errou!'}
                         </p>
                       ))}
                     </div>
-                    <p className="text-xs text-slate-400 font-mono pt-2">(Clique na palavra para ver o significado)</p>
+                    <p className="text-xs text-[var(--text-secondary)]">(Clique na palavra para ver o significado)</p>
                   </div>
-                  <div className="flex flex-col gap-2 w-full mt-4">
+                  <div className="flex flex-col gap-3 mt-6">
                     <button
                       onClick={restartTetra}
-                      className="w-full py-2 sm:py-3 px-4 sm:px-5 rounded-lg bg-[#8b5cf6] text-white font-bold text-sm sm:text-base hover:bg-[#6d28d9] transition-all duration-200 flex items-center justify-center gap-2"
+                      className="btn-primary py-3 px-5 rounded-xl font-semibold flex items-center justify-center gap-2"
                     >
-                      <Play size={16} className="sm:w-[18px] sm:h-[18px]" />
+                      <Play size={16} />
                       Jogar Novamente
                     </button>
                     <button
                       onClick={voltarParaNormal}
-                      className="w-full py-2 sm:py-3 px-4 sm:px-5 rounded-lg bg-[#2d2d2d] text-[#d0d0d0] font-bold text-sm sm:text-base hover:bg-[#3d3d3d] border border-[#3d3d3d] hover:border-[#8b5cf6] transition-all duration-200 flex items-center justify-center gap-2"
+                      className="btn-secondary py-3 px-5 rounded-xl font-semibold flex items-center justify-center gap-2"
                     >
-                      <Home size={16} className="sm:w-[18px] sm:h-[18px]" />
+                      <Home size={16} />
                       Modo Normal
                     </button>
                   </div>
@@ -835,16 +840,16 @@ function App() {
 
             {/* Modal de vitória/derrota para modo normal e speedrun */}
             {(modo === 'normal' || modo === 'speedrun') && gameState.gameStatus !== 'playing' && showVictoryModal && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-                <div className="p-4 sm:p-6 bg-[#2d2d2d] rounded-lg border border-[#3d3d3d] shadow-xl min-w-[280px] sm:min-w-[320px] max-w-full flex flex-col items-center">
-                  <div className="space-y-2 text-center">
-                    <h3 className="text-xl sm:text-2xl font-bold text-[#8b5cf6] font-mono flex items-center justify-center gap-2">
+              <div className="fixed inset-0 z-50 flex items-center justify-center modal-backdrop">
+                <div className="card-elevated p-6 rounded-2xl min-w-[320px] max-w-md w-full mx-4 animate-scale-in">
+                  <div className="space-y-4 text-center">
+                    <h3 className="text-2xl font-bold text-gradient">
                       {gameState.gameStatus === 'won' ? (
                         <>
                           {gameState.guesses.length === 1 ? (
-                            <>🎉 Parabéns! <span className="ml-2 text-2xl sm:text-3xl">THE GOAT 🐐</span></>
+                            <>🎉 Parabéns! <span className="text-3xl">THE GOAT 🐐</span></>
                           ) : gameState.guesses.length === gameState.maxAttempts ? (
-                            <span className="text-2xl sm:text-3xl">Ufa!</span>
+                            <span className="text-3xl">Ufa!</span>
                           ) : (
                             <>🎉 Parabéns!</>
                           )}
@@ -853,64 +858,64 @@ function App() {
                         <>😔 Que pena!</>
                       )}
                     </h3>
-                    <p className="text-sm sm:text-base text-[#d0d0d0] font-mono">
+                    <p className="text-[var(--text-primary)]">
                       {gameState.gameStatus === 'won' ? (
                         <>
                           {modo === 'speedrun' && gameState.speedRunTime ? (
                             <>Você completou em {formatTime(gameState.speedRunTime)}!<br />
                             Tentativas: {gameState.guesses.length}<br />
-                            Palavra: <span className="font-bold text-[#4ade80]">{palavraCorreta}</span></>
+                            Palavra: <span className="font-bold text-[var(--success)]">{palavraCorreta}</span></>
                           ) : (
                             <>Você descobriu a palavra em {gameState.guesses.length} tentativa{gameState.guesses.length !== 1 ? 's' : ''}!<br />
-                            Palavra: <span className="font-bold text-[#4ade80]">{palavraCorreta}</span></>
+                            Palavra: <span className="font-bold text-[var(--success)]">{palavraCorreta}</span></>
                           )}
                         </>
                       ) : (
-                        <>A palavra era: <span className="font-bold text-[#4ade80]">{palavraCorreta}</span></>
+                        <>A palavra era: <span className="font-bold text-[var(--success)]">{palavraCorreta}</span></>
                       )}
                     </p>
                   </div>
                   {modo === 'speedrun' ? (
-                    <div className="flex flex-col gap-3 w-full pt-4">
-                      <div className="flex flex-col sm:flex-row gap-3 w-full">
+                    <div className="flex flex-col gap-3 mt-6">
+                      <div className="flex gap-3">
                         <button
                           onClick={voltarParaNormal}
-                          className="flex-1 py-2 sm:py-3 px-4 sm:px-5 rounded-lg bg-[#2d2d2d] text-[#d0d0d0] font-bold text-sm sm:text-base hover:bg-[#3d3d3d] border border-[#3d3d3d] hover:border-[#8b5cf6] transition-all duration-200 flex items-center justify-center gap-2"
+                          className="flex-1 btn-secondary py-3 px-5 rounded-xl font-semibold flex items-center justify-center gap-2"
                         >
-                          <Home size={16} className="sm:w-[18px] sm:h-[18px]" />
+                          <Home size={16} />
                           Modo Normal
                         </button>
                         <button
                           onClick={restartGame}
-                          className="flex-1 py-2 sm:py-3 px-4 sm:px-5 rounded-lg bg-gradient-to-r from-[#8b5cf6] to-[#a855f7] text-white font-bold text-sm sm:text-base hover:from-[#7c3aed] hover:to-[#9333ea] transition-all duration-200 flex items-center justify-center gap-2 whitespace-nowrap"
+                          className="flex-1 btn-primary py-3 px-5 rounded-xl font-semibold flex items-center justify-center gap-2"
                         >
-                          <Play size={16} className="sm:w-[18px] sm:h-[18px]" />
+                          <Play size={16} />
                           Jogar Novamente
                         </button>
                       </div>
                       <button
                         onClick={() => fetchMeaning(palavraCorreta)}
-                        className="w-full py-2 sm:py-3 px-4 sm:px-5 rounded-lg bg-[#4ade80] text-[#1a1a1a] font-bold text-sm sm:text-base hover:bg-[#22c55e] transition-all duration-200 flex items-center justify-center gap-2"
+                        className="w-full py-3 px-5 rounded-xl bg-[var(--success)] text-[var(--bg-primary)] font-semibold hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
                       >
-                        <BookOpen size={16} className="sm:w-[18px] sm:h-[18px]" />
+                        <BookOpen size={16} />
                         Ver significado no Wiktionary
                       </button>
                     </div>
                   ) : (
-                    <div className="flex flex-col gap-3 w-full pt-4">
+                    <div className="flex flex-col gap-3 mt-6">
                       <button
                         onClick={restartGame}
-                        className="w-full py-2 sm:py-3 px-4 sm:px-5 rounded-lg bg-[#8b5cf6] text-white font-bold text-sm sm:text-base hover:bg-[#6d28d9] transition-all duration-200 flex items-center justify-center gap-2"
+                        className="btn-primary py-3 px-5 rounded-xl font-semibold flex items-center justify-center gap-2"
                       >
-                        <Play size={16} className="sm:w-[18px] sm:h-[18px]" />
+                        <Play size={16} />
                         Jogar Novamente
                       </button>
                       {gameState.gameStatus === 'won' && (
                         <button
                           onClick={() => fetchMeaning(palavraCorreta)}
-                          className="w-full py-2 sm:py-3 px-4 sm:px-5 rounded-lg bg-[#4ade80] text-[#1a1a1a] font-bold text-sm sm:text-base hover:bg-[#22c55e] transition-all duration-200 flex items-center justify-center gap-2"
+                          className="w-full py-3 px-5 rounded-xl bg-[var(--success)] text-[var(--bg-primary)] font-semibold hover:opacity-90 transition-opacity flex items-center justify-center gap-2"
                         >
-                          <BookOpen size={16} className="sm:w-[18px] sm:h-[18px]" />
+                          <BookOpen size={16} />
                           Ver significado no Wiktionary
                         </button>
                       )}
@@ -925,45 +930,47 @@ function App() {
                 {/* Overlay para capturar foco e impedir interação */}
                 <div
                   tabIndex={0}
-                  className="fixed inset-0 z-40 bg-transparent"
+                  className="console-overlay fixed inset-0 z-40"
                   onClick={e => { e.preventDefault(); inputRef.current?.focus(); }}
                   onFocus={() => inputRef.current?.focus()}
                 />
                 {/* Linha de comando estilo Vim no footer */}
-                <div className="fixed left-0 right-0 bottom-0 z-50 w-full bg-black border-t border-[#8b5cf6] flex items-center px-2 sm:px-4 py-2" style={{minHeight: '40px'}}>
-                  <span className="text-[#8b5cf6] font-mono text-lg sm:text-xl mr-2">:</span>
+                <div className="console-input fixed left-0 right-0 bottom-0 z-50 w-full flex items-center px-4 py-3">
+                  <span className="console-prompt text-xl mr-2 font-mono">:</span>
                   <input
                     ref={inputRef}
-                    className="bg-transparent border-none outline-none text-[#d0d0d0] font-mono text-lg sm:text-xl w-32 sm:w-48"
+                    className="bg-transparent border-none outline-none text-[var(--text-primary)] font-mono text-xl flex-1"
                     value={comando}
                     onChange={e => setComando(e.target.value)}
                     onKeyDown={processarComando}
                     autoFocus
                     spellCheck={false}
                   />
-                  <span className="ml-2 sm:ml-4 text-[#8b5cf6] font-mono text-xs hidden sm:block"><b>q!</b> (reiniciar), <b>admin</b> (resposta), <b>magiaadmin</b> (mana), <b>Esc</b> (cancelar)</span>
+                  <span className="ml-4 text-[var(--text-secondary)] font-mono text-xs hidden sm:block">
+                    <b>q!</b> (reiniciar), <b>admin</b> (resposta), <b>magiaadmin</b> (mana), <b>Esc</b> (cancelar)
+                  </span>
                 </div>
               </>
             )}
             
             {/* Modal de significado */}
             {showMeaning && (
-              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-                <div className="bg-[#1a1a1a] border border-[#8b5cf6] rounded-lg p-4 sm:p-6 max-w-4xl w-full h-[80vh] flex flex-col">
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg sm:text-xl font-bold text-[#8b5cf6] font-mono">Significado de "{wordToSearch}"</h2>
+              <div className="fixed inset-0 z-50 flex items-center justify-center modal-backdrop">
+                <div className="modal max-w-4xl w-full h-[80vh] mx-4 flex flex-col">
+                  <div className="modal-header p-4 flex items-center justify-between">
+                    <h2 className="text-xl font-bold text-[var(--text-primary)]">Significado de "{wordToSearch}"</h2>
                     <button
                       onClick={() => setShowMeaning(false)}
-                      className="p-2 rounded bg-[#2d2d2d] text-[#d0d0d0] hover:bg-[#3d3d3d] border border-[#3d3d3d] hover:border-[#8b5cf6] transition-colors font-mono"
+                      className="btn-ghost p-2 rounded-xl hover:bg-[var(--bg-hover)] transition-colors"
                     >
                       ✕
                     </button>
                   </div>
                   
-                  <div className="flex-1">
+                  <div className="flex-1 p-4">
                     <iframe
                       src={`https://pt.wiktionary.org/wiki/${wordToSearch.toLowerCase()}`}
-                      className="w-full h-full border border-[#3d3d3d] rounded"
+                      className="w-full h-full border border-[var(--border-primary)] rounded-xl"
                       title={`Significado de ${wordToSearch}`}
                     />
                   </div>
@@ -1007,16 +1014,16 @@ function App() {
               stats={stats}
             />
             <AboutModal isOpen={showAbout} onClose={() => setShowAbout(false)} />
-            <div className="hidden sm:block">
-              {mascotMessage && <Mascot key={mascotKey} message={mascotMessage} isCastingSpell={isCastingSpell} />}
-            </div>
+            
+            {mascotMessage && <ModernMascot key={mascotKey} message={mascotMessage} isCastingSpell={isCastingSpell} />}
           </main>
+          
           <HelpModal
             isOpen={showHelp}
             onClose={() => setShowHelp(false)}
             startTour={() => setTourOpen(true)}
           />
-        </PalavrimLayout>
+        </div>
       } />
     </Routes>
   );
